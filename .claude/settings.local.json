@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm install -D @types/node)",
+      "Read(//c/Users/User/Downloads/**)",
+      "Bash(powershell -Command \"Expand-Archive -Path ''files.code.zip'' -DestinationPath ''./files_extracted'' -Force\")",
+      "Bash(npm install recharts)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__list_organizations",
+      "Bash(npm install:*)"
+    ]
+  }
+}
