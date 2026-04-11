@@ -3,6 +3,11 @@ export type AppStep =
   | 'login'
   | 'student-select'
   | 'student-form'
+  | 'student-detail'
+  | 'anamnesis'
+  | 'assessment-list'
+  | 'assessment-form'
+  | 'progress-report'
   | 'wellness'
   | 'workout'
   | 'review'
@@ -18,17 +23,111 @@ export interface AuthSession {
 }
 
 // ─── Students ────────────────────────────────────────────────────────────────
+export type Sex = 'M' | 'F'
+
 export interface Student {
   id: string
   name: string
   avatarUrl?: string
   level?: string
+  sex?: Sex
   phone?: string
   email?: string
   birthDate?: string
+  heightM?: number
   goal?: string
   lastSession?: string
   active?: boolean
+}
+
+// ─── Anamnese ────────────────────────────────────────────────────────────────
+export interface Anamnesis {
+  id?: string
+  studentId: string
+  familyDiseases?: string
+  personalDiseases?: string
+  exerciseRestrictions?: string
+  surgeries?: string
+  allergies?: string
+  injuries?: string
+  medications?: string
+  bodyPains?: string
+  smoking?: string
+  diet?: string
+  currentExercise?: string
+  activityType?: string
+  frequency?: string
+  // PAR-Q
+  parqHeart?: boolean
+  parqChestPain?: boolean
+  parqChestPainMonth?: boolean
+  parqDizziness?: boolean
+  parqBoneJoint?: boolean
+  parqBloodPressureMed?: boolean
+  parqOtherReason?: boolean
+  parqObservations?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+// ─── Avaliação Física ────────────────────────────────────────────────────────
+export type AssessmentProtocol =
+  | 'jackson_pollock_7'
+  | 'pollock_3'
+  | 'guedes'
+  | 'faulkner'
+
+export interface PhysicalAssessment {
+  id?: string
+  studentId: string
+  assessmentDate: string
+  protocol: AssessmentProtocol
+  // Antropometria
+  weightKg?: number
+  heightM?: number
+  bmi?: number
+  // Dobras cutâneas
+  skinfoldSubscapular?: number
+  skinfoldTriceps?: number
+  skinfoldBiceps?: number
+  skinfoldChest?: number
+  skinfoldMidaxillary?: number
+  skinfoldSuprailiac?: number
+  skinfoldAbdominal?: number
+  skinfoldThigh?: number
+  skinfoldCalf?: number
+  // Perimetria
+  circShoulder?: number
+  circChest?: number
+  circWaist?: number
+  circAbdomen?: number
+  circHip?: number
+  circArmRight?: number
+  circArmLeft?: number
+  circForearmRight?: number
+  circForearmLeft?: number
+  circThighRight?: number
+  circThighLeft?: number
+  circCalfRight?: number
+  circCalfLeft?: number
+  // Diâmetros ósseos
+  boneHumerus?: number
+  boneFemur?: number
+  boneWrist?: number
+  // Calculados
+  sumSkinfolds?: number
+  whr?: number
+  bodyFatPct?: number
+  fatMassKg?: number
+  leanMassKg?: number
+  muscleMassKg?: number
+  residualMassKg?: number
+  boneMassKg?: number
+  bmr?: number
+  activityFactor?: number
+  tdee?: number
+  notes?: string
+  createdAt?: string
 }
 
 // ─── Wellness ────────────────────────────────────────────────────────────────
@@ -84,6 +183,7 @@ export interface SessionState {
   editingStudent: Student | null
   wellness: WellnessCheckin | null
   workout: WorkoutSession | null
+  editingAssessmentId: string | null
 }
 
 // ─── API ─────────────────────────────────────────────────────────────────────

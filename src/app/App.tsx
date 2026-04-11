@@ -1,10 +1,17 @@
+import { useEffect } from 'react'
 import { useSession } from '@/shared/store/SessionContext'
 import { AppShell } from '@/shared/components/layout/AppShell'
+import { startQueueProcessor } from '@/shared/services/queue'
 
 // Feature pages
 import { LoginPage } from '@/features/auth/LoginPage'
 import { StudentSelectPage } from '@/features/students/StudentSelectPage'
 import { StudentFormPage } from '@/features/students/StudentFormPage'
+import { StudentDetailPage } from '@/features/students/StudentDetailPage'
+import { AnamnesisFormPage } from '@/features/anamnesis/AnamnesisFormPage'
+import { AssessmentListPage } from '@/features/assessments/AssessmentListPage'
+import { AssessmentFormPage } from '@/features/assessments/AssessmentFormPage'
+import { ProgressReportPage } from '@/features/assessments/ProgressReportPage'
 import { WellnessPage } from '@/features/wellness/WellnessPage'
 import { WorkoutPage } from '@/features/workout/WorkoutPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
@@ -14,11 +21,18 @@ import { ProgressPage } from '@/features/progress/ProgressPage'
 export function App() {
   const { state, navigate, setEditingStudent } = useSession()
 
+  // Inicia o processador de fila offline (flush automático ao voltar online)
+  useEffect(() => {
+    const stop = startQueueProcessor()
+    return stop
+  }, [])
+
   const goToStudentSelect = () => navigate('student-select')
+  const goToStudentDetail = () => navigate('student-detail')
 
   const handleStudentSaved = () => {
     setEditingStudent(null)
-    navigate('student-select')
+    navigate(state.student ? 'student-detail' : 'student-select')
   }
 
   const renderStep = () => {
@@ -33,10 +47,25 @@ export function App() {
         return (
           <StudentFormPage
             editStudent={state.editingStudent ?? undefined}
-            onBack={goToStudentSelect}
+            onBack={state.student ? goToStudentDetail : goToStudentSelect}
             onSaved={handleStudentSaved}
           />
         )
+
+      case 'student-detail':
+        return <StudentDetailPage />
+
+      case 'anamnesis':
+        return <AnamnesisFormPage />
+
+      case 'assessment-list':
+        return <AssessmentListPage />
+
+      case 'assessment-form':
+        return <AssessmentFormPage />
+
+      case 'progress-report':
+        return <ProgressReportPage />
 
       case 'wellness':
         return <WellnessPage />

@@ -24,6 +24,7 @@ const INITIAL_STATE: SessionState = {
   editingStudent: null,
   wellness: null,
   workout: null,
+  editingAssessmentId: null,
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ type Action =
   | { type: 'LOGIN'; payload: AuthSession }
   | { type: 'SELECT_STUDENT'; payload: Student }
   | { type: 'SET_EDITING_STUDENT'; payload: Student | null }
+  | { type: 'SET_EDITING_ASSESSMENT'; payload: string | null }
   | { type: 'SET_WELLNESS'; payload: WellnessCheckin }
   | { type: 'SET_WORKOUT'; payload: WorkoutSession }
   | { type: 'UPDATE_WORKOUT'; payload: Partial<WorkoutSession> }
@@ -44,7 +46,10 @@ function reducer(state: SessionState, action: Action): SessionState {
       return { ...state, auth: action.payload, step: 'student-select' }
 
     case 'SELECT_STUDENT':
-      return { ...state, student: action.payload, step: 'wellness' }
+      return { ...state, student: action.payload, step: 'student-detail' }
+
+    case 'SET_EDITING_ASSESSMENT':
+      return { ...state, editingAssessmentId: action.payload }
 
     case 'SET_EDITING_STUDENT':
       return { ...state, editingStudent: action.payload }
@@ -80,6 +85,7 @@ interface SessionContextValue {
   login: (auth: AuthSession) => void
   selectStudent: (student: Student) => void
   setEditingStudent: (student: Student | null) => void
+  setEditingAssessment: (id: string | null) => void
   setWellness: (wellness: WellnessCheckin) => void
   setWorkout: (workout: WorkoutSession) => void
   updateWorkout: (patch: Partial<WorkoutSession>) => void
@@ -127,6 +133,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_EDITING_STUDENT', payload: student })
   }, [])
 
+  const setEditingAssessment = useCallback((id: string | null) => {
+    dispatch({ type: 'SET_EDITING_ASSESSMENT', payload: id })
+  }, [])
+
   const setWellness = useCallback((wellness: WellnessCheckin) => {
     dispatch({ type: 'SET_WELLNESS', payload: wellness })
   }, [])
@@ -149,7 +159,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   return (
     <SessionContext.Provider
-      value={{ state, login, selectStudent, setEditingStudent, setWellness, setWorkout, updateWorkout, navigate, logout }}
+      value={{ state, login, selectStudent, setEditingStudent, setEditingAssessment, setWellness, setWorkout, updateWorkout, navigate, logout }}
     >
       {children}
     </SessionContext.Provider>

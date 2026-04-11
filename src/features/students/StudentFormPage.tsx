@@ -5,13 +5,15 @@ import { Button } from '@/shared/components/ui/Button'
 import { Card } from '@/shared/components/ui/Card'
 import { api } from '@/shared/services/api'
 import { formatPhone } from '@/shared/utils/phone'
-import type { Student } from '@/shared/types'
+import type { Student, Sex } from '@/shared/types'
 
 type Level = 'Iniciante' | 'Intermediário' | 'Avançado'
 
 interface FormData {
   name: string
   level: Level | ''
+  sex: Sex | ''
+  heightM: string
   phone: string
   email: string
   birthDate: string
@@ -36,6 +38,8 @@ export function StudentFormPage({ editStudent, onBack, onSaved }: Props) {
   const [form, setForm] = useState<FormData>({
     name: editStudent?.name ?? '',
     level: (editStudent?.level as Level) ?? '',
+    sex: (editStudent?.sex as Sex) ?? '',
+    heightM: editStudent?.heightM != null ? String(editStudent.heightM) : '',
     phone: editStudent?.phone ?? '',
     email: editStudent?.email ?? '',
     birthDate: editStudent?.birthDate ?? '',
@@ -63,6 +67,8 @@ export function StudentFormPage({ editStudent, onBack, onSaved }: Props) {
     const payload: Omit<Student, 'id'> = {
       name: form.name.trim(),
       level: form.level,
+      sex: form.sex || undefined,
+      heightM: form.heightM ? Number(form.heightM) : undefined,
       phone: form.phone.trim() || undefined,
       email: form.email.trim() || undefined,
       birthDate: form.birthDate || undefined,
@@ -137,6 +143,43 @@ export function StudentFormPage({ editStudent, onBack, onSaved }: Props) {
                   {lvl}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Sexo + Altura */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs uppercase tracking-widest text-text-muted">Sexo</label>
+              <div className="flex gap-2">
+                {(['F', 'M'] as Sex[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, sex: s }))}
+                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                      form.sex === s
+                        ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200'
+                        : 'bg-white/[0.04] border-white/10 text-text-muted'
+                    }`}
+                  >
+                    {s === 'F' ? 'Fem' : 'Masc'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs uppercase tracking-widest text-text-muted">
+                Altura (m)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.heightM}
+                onChange={(e) => setForm((prev) => ({ ...prev, heightM: e.target.value }))}
+                placeholder="1.65"
+                inputMode="decimal"
+                className="input-field font-mono"
+              />
             </div>
           </div>
 

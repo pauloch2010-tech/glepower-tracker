@@ -37,6 +37,7 @@ export default {
       fontFamily: {
         display: ['"Barlow Condensed"', 'sans-serif'],
         body: ['Archivo', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Space Mono"', 'monospace'],
       },
       backgroundImage: {
         'gradient-brand': 'linear-gradient(135deg, #311848 0%, #E91E63 100%)',

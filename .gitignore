@@ -1,4 +1,7 @@
 node_modules
 dist
+dev-dist
 .env.local
 .env*.local
+_migration_temp.sql
+_migration_body.json
