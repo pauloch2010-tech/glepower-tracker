@@ -13,6 +13,6 @@ jobs:
       - name: Ping Supabase
         run: |
           curl -sSf "https://ggyzxyhyoewwvprgccuq.supabase.co/rest/v1/trainers?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "apikey: sb_publishable_zrnufccn5mlNgbmrvb6DiQ_2wz5OM-U" \
+            -H "Authorization: Bearer sb_publishable_zrnufccn5mlNgbmrvb6DiQ_2wz5OM-U" \
             -o /dev/null && echo "Supabase ping OK"
