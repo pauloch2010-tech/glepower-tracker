@@ -4,6 +4,7 @@ import { PageContainer } from '@/shared/components/layout/PageContainer'
 import { Button } from '@/shared/components/ui/Button'
 import { Card } from '@/shared/components/ui/Card'
 import { api } from '@/shared/services/api'
+import { formatPhone } from '@/shared/utils/phone'
 import type { Student } from '@/shared/types'
 
 type Level = 'Iniciante' | 'Intermediário' | 'Avançado'
@@ -47,6 +48,9 @@ export function StudentFormPage({ editStudent, onBack, onSaved }: Props) {
 
   const set = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
+
+  const setPhone = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, phone: formatPhone(e.target.value) }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -142,8 +146,10 @@ export function StudentFormPage({ editStudent, onBack, onSaved }: Props) {
             <input
               type="tel"
               value={form.phone}
-              onChange={set('phone')}
+              onChange={setPhone}
               placeholder="(11) 99999-9999"
+              inputMode="numeric"
+              maxLength={15}
               className="input-field"
             />
           </div>
