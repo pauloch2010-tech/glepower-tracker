@@ -5,25 +5,32 @@ import { PageContainer } from '@/shared/components/layout/PageContainer'
 import { Card } from '@/shared/components/ui/Card'
 import { Button } from '@/shared/components/ui/Button'
 import { api } from '@/shared/services/api'
-import type { Anamnesis, PhysicalAssessment } from '@/shared/types'
+import type { Anamnesis, PhysicalAssessment, WorkoutPlan, WorkoutExecution } from '@/shared/types'
 
 export function StudentDetailPage() {
   const { state, navigate, setEditingStudent, setEditingAssessment } = useSession()
   const student = state.student
   const [anamnesis, setAnamnesis] = useState<Anamnesis | null>(null)
   const [assessments, setAssessments] = useState<PhysicalAssessment[]>([])
+  const [plans, setPlans] = useState<WorkoutPlan[]>([])
+  const [executions, setExecutions] = useState<WorkoutExecution[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!student) return
     setLoading(true)
-    Promise.all([api.getAnamnesis(student.id), api.listAssessments(student.id)]).then(
-      ([aRes, asRes]) => {
-        if (aRes.success) setAnamnesis(aRes.data ?? null)
-        if (asRes.success && asRes.data) setAssessments(asRes.data)
-        setLoading(false)
-      },
-    )
+    Promise.all([
+      api.getAnamnesis(student.id),
+      api.listAssessments(student.id),
+      api.listPlans(student.id),
+      api.listExecutions(student.id),
+    ]).then(([aRes, asRes, pRes, eRes]) => {
+      if (aRes.success) setAnamnesis(aRes.data ?? null)
+      if (asRes.success && asRes.data) setAssessments(asRes.data)
+      if (pRes.success && pRes.data) setPlans(pRes.data)
+      if (eRes.success && eRes.data) setExecutions(eRes.data)
+      setLoading(false)
+    })
   }, [student])
 
   if (!student) return null
@@ -38,7 +45,11 @@ export function StudentDetailPage() {
   const latestAssessment = assessments[0]
   const canCreateAssessment = hasAnamnesis // regra: anamnese obrigatória antes da 1ª avaliação
 
-  const handleStartWorkout = () => navigate('wellness')
+  const activePlans = plans.filter((p) => p.active)
+  const completedExecs = executions.filter((e) => e.status === 'completed')
+  const inProgressExec = executions.find((e) => e.status === 'in_progress')
+
+  const handleStartWorkout = () => navigate('workout-plan-list')
   const handleEditStudent = () => {
     setEditingStudent(student)
     navigate('student-form')
@@ -139,8 +150,13 @@ export function StudentDetailPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <p className="font-semibold text-white text-sm">Iniciar Treino</p>
-            <p className="text-[11px] text-text-muted leading-tight">Wellness + workout</p>
+            <p className="font-semibold text-white text-sm">Treinos</p>
+            <p className="text-[11px] text-text-muted leading-tight">
+              {loading ? '...' : inProgressExec ? 'Em andamento' : `${activePlans.length} planos · ${completedExecs.length} executados`}
+            </p>
+            {inProgressExec && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            )}
           </button>
 
           {/* Progressão */}

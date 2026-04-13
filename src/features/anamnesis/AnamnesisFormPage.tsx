@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSession } from '@/shared/store/SessionContext'
 import { AppShell } from '@/shared/components/layout/AppShell'
 import { PageContainer } from '@/shared/components/layout/PageContainer'
@@ -39,8 +39,10 @@ export function AnamnesisFormPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<Partial<Anamnesis>>({})
+  const printRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!student) return
@@ -67,6 +69,61 @@ export function AnamnesisFormPage() {
       return
     }
     navigate('student-detail')
+  }
+
+  const isEditing = !!form.id
+
+  const handleExportPDF = async () => {
+    if (!printRef.current) return
+    setExporting(true)
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ])
+      const canvas = await html2canvas(printRef.current, { backgroundColor: '#0a0a0a', scale: 2 })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const w = pdf.internal.pageSize.getWidth()
+      const h = (canvas.height * w) / canvas.width
+      if (h > pdf.internal.pageSize.getHeight()) {
+        // Multi-page
+        let y = 0
+        const pageH = pdf.internal.pageSize.getHeight()
+        const sliceH = Math.floor((pageH / h) * canvas.height)
+        while (y < canvas.height) {
+          const sliceCanvas = document.createElement('canvas')
+          sliceCanvas.width = canvas.width
+          sliceCanvas.height = Math.min(sliceH, canvas.height - y)
+          sliceCanvas.getContext('2d')!.drawImage(canvas, 0, -y)
+          const sliceImg = sliceCanvas.toDataURL('image/png')
+          if (y > 0) pdf.addPage()
+          const slicePdfH = (sliceCanvas.height * w) / sliceCanvas.width
+          pdf.addImage(sliceImg, 'PNG', 0, 0, w, slicePdfH)
+          y += sliceH
+        }
+      } else {
+        pdf.addImage(imgData, 'PNG', 0, 0, w, h)
+      }
+      const filename = `anamnese-${student!.name.replace(/\s+/g, '-').toLowerCase()}.pdf`
+      const blob = pdf.output('blob')
+
+      // Try Web Share API first (mobile)
+      if (navigator.canShare?.({ files: [new File([blob], filename, { type: 'application/pdf' })] })) {
+        const file = new File([blob], filename, { type: 'application/pdf' })
+        await navigator.share({
+          title: `Anamnese - ${student!.name}`,
+          text: `Anamnese clínica de ${student!.name} - GlePower`,
+          files: [file],
+        })
+      } else {
+        pdf.save(filename)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setExporting(false)
+    }
   }
 
   const header = (
@@ -207,7 +264,7 @@ export function AnamnesisFormPage() {
               </Card>
             )}
 
-            <div className="flex gap-3 pt-2 pb-8">
+            <div className="flex gap-3 pt-2">
               <Button
                 variant="secondary"
                 onClick={() => setStep(1)}
@@ -220,6 +277,87 @@ export function AnamnesisFormPage() {
                 {saving ? 'Salvando...' : 'Salvar Anamnese'}
               </Button>
             </div>
+
+            {isEditing && (
+              <Button
+                variant="secondary"
+                onClick={handleExportPDF}
+                disabled={exporting}
+                className="w-full mb-4"
+              >
+                {exporting ? 'Gerando...' : 'Exportar PDF / Enviar'}
+              </Button>
+            )}
+
+            {/* Print-ready summary (hidden, used for PDF) */}
+            <div className="fixed -left-[9999px] top-0">
+              <div ref={printRef} className="w-[800px] bg-[#0a0a0a] p-8 text-white">
+                <div className="flex items-center gap-4 pb-4 border-b border-white/10 mb-6">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center">
+                    <span className="font-bold text-xl text-white">GP</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">GlePower — Anamnese Clínica</p>
+                    <p className="text-sm text-white/60">
+                      {student!.name} · {new Date().toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+
+                <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
+                  Dados Clínicos
+                </h3>
+                <div className="grid grid-cols-1 gap-3 mb-8">
+                  {CLINICAL_FIELDS.map(({ key, label }) => (
+                    <div key={key} className="border-b border-white/5 pb-2">
+                      <p className="text-xs text-white/50 mb-0.5">{label}</p>
+                      <p className="text-sm">{(form[key] as string) || '—'}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
+                  PAR-Q — Questionário de Prontidão
+                </h3>
+                <div className="grid grid-cols-1 gap-3 mb-6">
+                  {PARQ_FIELDS.map(({ key, label }) => (
+                    <div key={key} className="flex items-start gap-3 border-b border-white/5 pb-2">
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded ${
+                          form[key] === true
+                            ? 'bg-rose-500/30 text-rose-300'
+                            : 'bg-emerald-500/30 text-emerald-300'
+                        }`}
+                      >
+                        {form[key] === true ? 'SIM' : 'NÃO'}
+                      </span>
+                      <p className="text-sm flex-1">{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {parqHasYes && (
+                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-rose-200">
+                      ATENÇÃO: Respostas SIM no PAR-Q. Recomenda-se liberação médica.
+                    </p>
+                  </div>
+                )}
+
+                {form.parqObservations && (
+                  <div>
+                    <p className="text-xs text-white/50 mb-1">Observações</p>
+                    <p className="text-sm">{form.parqObservations}</p>
+                  </div>
+                )}
+
+                <div className="mt-8 pt-4 border-t border-white/10 text-center text-xs text-white/30">
+                  Gerado por GlePower · {new Date().toLocaleDateString('pt-BR')}
+                </div>
+              </div>
+            </div>
+
+            <div className="pb-4" />
           </>
         )}
       </PageContainer>

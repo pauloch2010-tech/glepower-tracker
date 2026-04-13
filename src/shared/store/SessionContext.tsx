@@ -25,6 +25,8 @@ const INITIAL_STATE: SessionState = {
   wellness: null,
   workout: null,
   editingAssessmentId: null,
+  editingPlanId: null,
+  editingExecutionId: null,
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -33,6 +35,8 @@ type Action =
   | { type: 'SELECT_STUDENT'; payload: Student }
   | { type: 'SET_EDITING_STUDENT'; payload: Student | null }
   | { type: 'SET_EDITING_ASSESSMENT'; payload: string | null }
+  | { type: 'SET_EDITING_PLAN'; payload: string | null }
+  | { type: 'SET_EDITING_EXECUTION'; payload: string | null }
   | { type: 'SET_WELLNESS'; payload: WellnessCheckin }
   | { type: 'SET_WORKOUT'; payload: WorkoutSession }
   | { type: 'UPDATE_WORKOUT'; payload: Partial<WorkoutSession> }
@@ -50,6 +54,12 @@ function reducer(state: SessionState, action: Action): SessionState {
 
     case 'SET_EDITING_ASSESSMENT':
       return { ...state, editingAssessmentId: action.payload }
+
+    case 'SET_EDITING_PLAN':
+      return { ...state, editingPlanId: action.payload }
+
+    case 'SET_EDITING_EXECUTION':
+      return { ...state, editingExecutionId: action.payload }
 
     case 'SET_EDITING_STUDENT':
       return { ...state, editingStudent: action.payload }
@@ -86,6 +96,8 @@ interface SessionContextValue {
   selectStudent: (student: Student) => void
   setEditingStudent: (student: Student | null) => void
   setEditingAssessment: (id: string | null) => void
+  setEditingPlan: (id: string | null) => void
+  setEditingExecution: (id: string | null) => void
   setWellness: (wellness: WellnessCheckin) => void
   setWorkout: (workout: WorkoutSession) => void
   updateWorkout: (patch: Partial<WorkoutSession>) => void
@@ -137,6 +149,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_EDITING_ASSESSMENT', payload: id })
   }, [])
 
+  const setEditingPlan = useCallback((id: string | null) => {
+    dispatch({ type: 'SET_EDITING_PLAN', payload: id })
+  }, [])
+
+  const setEditingExecution = useCallback((id: string | null) => {
+    dispatch({ type: 'SET_EDITING_EXECUTION', payload: id })
+  }, [])
+
   const setWellness = useCallback((wellness: WellnessCheckin) => {
     dispatch({ type: 'SET_WELLNESS', payload: wellness })
   }, [])
@@ -159,7 +179,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   return (
     <SessionContext.Provider
-      value={{ state, login, selectStudent, setEditingStudent, setEditingAssessment, setWellness, setWorkout, updateWorkout, navigate, logout }}
+      value={{ state, login, selectStudent, setEditingStudent, setEditingAssessment, setEditingPlan, setEditingExecution, setWellness, setWorkout, updateWorkout, navigate, logout }}
     >
       {children}
     </SessionContext.Provider>

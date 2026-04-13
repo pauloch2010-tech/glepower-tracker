@@ -5,6 +5,8 @@ import type {
   WorkoutSession,
   Anamnesis,
   PhysicalAssessment,
+  WorkoutPlan,
+  WorkoutExecution,
 } from '@/shared/types'
 import { offlineQueue } from '@/shared/services/storage'
 import { supabase } from '@/shared/services/supabase'
@@ -404,6 +406,195 @@ async function supabaseSaveSession(session: WorkoutSession): Promise<ApiResponse
   return { success: true }
 }
 
+// ─── Workout Plans ──────────────────────────────────────────────────────────
+
+async function supabaseListPlans(studentId: string): Promise<ApiResponse<WorkoutPlan[]>> {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false })
+
+  if (error) return { success: false, error: error.message }
+  return {
+    success: true,
+    data: (data ?? []).map((r: Record<string, unknown>) => ({
+      id: r.id as string,
+      studentId: r.student_id as string,
+      trainerId: r.trainer_id as string,
+      name: r.name as string,
+      description: (r.description as string) ?? undefined,
+      exercises: (r.exercises ?? []) as WorkoutPlan['exercises'],
+      active: r.active as boolean,
+      createdAt: r.created_at as string,
+      updatedAt: r.updated_at as string,
+    })),
+  }
+}
+
+async function supabaseGetPlan(id: string): Promise<ApiResponse<WorkoutPlan>> {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  const r = data as Record<string, unknown>
+  return {
+    success: true,
+    data: {
+      id: r.id as string,
+      studentId: r.student_id as string,
+      trainerId: r.trainer_id as string,
+      name: r.name as string,
+      description: (r.description as string) ?? undefined,
+      exercises: (r.exercises ?? []) as WorkoutPlan['exercises'],
+      active: r.active as boolean,
+      createdAt: r.created_at as string,
+      updatedAt: r.updated_at as string,
+    },
+  }
+}
+
+async function supabaseCreatePlan(plan: Omit<WorkoutPlan, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<WorkoutPlan>> {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .insert({
+      student_id: plan.studentId,
+      trainer_id: plan.trainerId,
+      name: plan.name,
+      description: plan.description ?? null,
+      exercises: plan.exercises,
+      active: plan.active,
+    })
+    .select()
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  const r = data as Record<string, unknown>
+  return {
+    success: true,
+    data: {
+      id: r.id as string,
+      studentId: r.student_id as string,
+      trainerId: r.trainer_id as string,
+      name: r.name as string,
+      description: (r.description as string) ?? undefined,
+      exercises: (r.exercises ?? []) as WorkoutPlan['exercises'],
+      active: r.active as boolean,
+      createdAt: r.created_at as string,
+      updatedAt: r.updated_at as string,
+    },
+  }
+}
+
+async function supabaseUpdatePlan(id: string, plan: Partial<WorkoutPlan>): Promise<ApiResponse<WorkoutPlan>> {
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (plan.name !== undefined) payload.name = plan.name
+  if (plan.description !== undefined) payload.description = plan.description
+  if (plan.exercises !== undefined) payload.exercises = plan.exercises
+  if (plan.active !== undefined) payload.active = plan.active
+
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  const r = data as Record<string, unknown>
+  return {
+    success: true,
+    data: {
+      id: r.id as string,
+      studentId: r.student_id as string,
+      trainerId: r.trainer_id as string,
+      name: r.name as string,
+      description: (r.description as string) ?? undefined,
+      exercises: (r.exercises ?? []) as WorkoutPlan['exercises'],
+      active: r.active as boolean,
+      createdAt: r.created_at as string,
+      updatedAt: r.updated_at as string,
+    },
+  }
+}
+
+async function supabaseDeletePlan(id: string): Promise<ApiResponse<void>> {
+  const { error } = await supabase.from('workout_plans').delete().eq('id', id)
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
+// ─── Workout Executions ─────────────────────────────────────────────────────
+
+function dbToExecution(r: Record<string, unknown>): WorkoutExecution {
+  return {
+    id: r.id as string,
+    planId: (r.plan_id as string) ?? null,
+    studentId: r.student_id as string,
+    trainerId: r.trainer_id as string,
+    date: r.date as string,
+    exercises: (r.exercises ?? []) as WorkoutExecution['exercises'],
+    status: r.status as WorkoutExecution['status'],
+    notes: (r.notes as string) ?? undefined,
+    startedAt: r.started_at as string,
+    completedAt: (r.completed_at as string) ?? undefined,
+    createdAt: r.created_at as string,
+  }
+}
+
+async function supabaseListExecutions(studentId: string): Promise<ApiResponse<WorkoutExecution[]>> {
+  const { data, error } = await supabase
+    .from('workout_executions')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false })
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, data: (data ?? []).map((r) => dbToExecution(r as Record<string, unknown>)) }
+}
+
+async function supabaseCreateExecution(exec: Omit<WorkoutExecution, 'id' | 'createdAt'>): Promise<ApiResponse<WorkoutExecution>> {
+  const { data, error } = await supabase
+    .from('workout_executions')
+    .insert({
+      plan_id: exec.planId ?? null,
+      student_id: exec.studentId,
+      trainer_id: exec.trainerId,
+      date: exec.date,
+      exercises: exec.exercises,
+      status: exec.status,
+      notes: exec.notes ?? null,
+      started_at: exec.startedAt,
+      completed_at: exec.completedAt ?? null,
+    })
+    .select()
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, data: dbToExecution(data as Record<string, unknown>) }
+}
+
+async function supabaseUpdateExecution(id: string, updates: Partial<WorkoutExecution>): Promise<ApiResponse<WorkoutExecution>> {
+  const payload: Record<string, unknown> = {}
+  if (updates.exercises !== undefined) payload.exercises = updates.exercises
+  if (updates.status !== undefined) payload.status = updates.status
+  if (updates.notes !== undefined) payload.notes = updates.notes
+  if (updates.completedAt !== undefined) payload.completed_at = updates.completedAt
+
+  const { data, error } = await supabase
+    .from('workout_executions')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, data: dbToExecution(data as Record<string, unknown>) }
+}
+
 // ─── Legacy GAS caller (fallback when no Supabase) ───────────────────────────
 const SCRIPT_URL = import.meta.env.VITE_API_URL ?? ''
 const TIMEOUT_MS = 10_000
@@ -488,6 +679,42 @@ export const api = {
   },
   deleteAssessment(id: string): Promise<ApiResponse<void>> {
     if (USE_SUPABASE) return supabaseDeleteAssessment(id)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+
+  // ─── Workout Plans ────────────────────────────────────────────────────
+  listPlans(studentId: string): Promise<ApiResponse<WorkoutPlan[]>> {
+    if (USE_SUPABASE) return supabaseListPlans(studentId)
+    return Promise.resolve({ success: true, data: [] })
+  },
+  getPlan(id: string): Promise<ApiResponse<WorkoutPlan>> {
+    if (USE_SUPABASE) return supabaseGetPlan(id)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  createPlan(plan: Omit<WorkoutPlan, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<WorkoutPlan>> {
+    if (USE_SUPABASE) return supabaseCreatePlan(plan)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  updatePlan(id: string, plan: Partial<WorkoutPlan>): Promise<ApiResponse<WorkoutPlan>> {
+    if (USE_SUPABASE) return supabaseUpdatePlan(id, plan)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  deletePlan(id: string): Promise<ApiResponse<void>> {
+    if (USE_SUPABASE) return supabaseDeletePlan(id)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+
+  // ─── Workout Executions ──────────────────────────────────────────────
+  listExecutions(studentId: string): Promise<ApiResponse<WorkoutExecution[]>> {
+    if (USE_SUPABASE) return supabaseListExecutions(studentId)
+    return Promise.resolve({ success: true, data: [] })
+  },
+  createExecution(exec: Omit<WorkoutExecution, 'id' | 'createdAt'>): Promise<ApiResponse<WorkoutExecution>> {
+    if (USE_SUPABASE) return supabaseCreateExecution(exec)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  updateExecution(id: string, updates: Partial<WorkoutExecution>): Promise<ApiResponse<WorkoutExecution>> {
+    if (USE_SUPABASE) return supabaseUpdateExecution(id, updates)
     return Promise.resolve({ success: false, error: 'Supabase não configurado' })
   },
 

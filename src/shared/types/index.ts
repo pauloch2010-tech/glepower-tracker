@@ -8,6 +8,9 @@ export type AppStep =
   | 'assessment-list'
   | 'assessment-form'
   | 'progress-report'
+  | 'workout-plan-list'
+  | 'workout-plan-form'
+  | 'workout-execution'
   | 'wellness'
   | 'workout'
   | 'review'
@@ -175,6 +178,67 @@ export interface WorkoutSession {
   durationMinutes?: number
 }
 
+// ─── Workout Plans ──────────────────────────────────────────────────────────
+export interface PlanExercise {
+  id: string
+  exerciseName: string
+  muscleGroup: string
+  subGroup: string
+  targetSets: number
+  targetReps: string     // e.g. "8-12"
+  targetWeight?: string  // e.g. "30kg" or empty
+  restSeconds?: number
+  notes?: string
+}
+
+export interface WorkoutPlan {
+  id: string
+  studentId: string
+  trainerId: string
+  name: string
+  description?: string
+  exercises: PlanExercise[]
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Workout Executions ─────────────────────────────────────────────────────
+export interface ExecutionSet {
+  id: string
+  reps: number | null
+  weight: number | null
+  rpe?: number
+  completed: boolean
+}
+
+export interface ExecutionExercise {
+  exerciseId: string      // matches PlanExercise.id
+  exerciseName: string
+  muscleGroup: string
+  subGroup: string
+  targetReps: string
+  targetWeight?: string
+  sets: ExecutionSet[]
+  notes?: string
+}
+
+export type ExecutionStatus = 'in_progress' | 'completed'
+
+export interface WorkoutExecution {
+  id: string
+  planId: string | null
+  studentId: string
+  trainerId: string
+  date: string
+  exercises: ExecutionExercise[]
+  status: ExecutionStatus
+  notes?: string
+  startedAt: string
+  completedAt?: string
+  createdAt: string
+}
+
 // ─── Session State ───────────────────────────────────────────────────────────
 export interface SessionState {
   step: AppStep
@@ -184,6 +248,8 @@ export interface SessionState {
   wellness: WellnessCheckin | null
   workout: WorkoutSession | null
   editingAssessmentId: string | null
+  editingPlanId: string | null
+  editingExecutionId: string | null
 }
 
 // ─── API ─────────────────────────────────────────────────────────────────────

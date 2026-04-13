@@ -65,6 +65,67 @@ export function ProgressReportPage() {
     value: a[selected.key] as number | undefined,
   }))
 
+  const generatePDFBlob = async (): Promise<{ blob: Blob; filename: string } | null> => {
+    if (!reportRef.current) return null
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ])
+    const canvas = await html2canvas(reportRef.current, {
+      backgroundColor: '#0a0a0a',
+      scale: 2,
+    })
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+    const filename = `avaliacao-${student!.name.replace(/\s+/g, '-').toLowerCase()}.pdf`
+    return { blob: pdf.output('blob'), filename }
+  }
+
+  const handleShareWhatsApp = async () => {
+    setExporting(true)
+    try {
+      const result = await generatePDFBlob()
+      if (!result) return
+
+      // Web Share API com arquivo (funciona no mobile)
+      if (navigator.canShare?.({ files: [new File([result.blob], result.filename, { type: 'application/pdf' })] })) {
+        const file = new File([result.blob], result.filename, { type: 'application/pdf' })
+        await navigator.share({
+          title: `Evolução - ${student!.name}`,
+          text: `Relatório de evolução de ${student!.name} - GlePower`,
+          files: [file],
+        })
+      } else {
+        // Fallback: abre WhatsApp com mensagem + salva PDF separado
+        const phone = student!.phone?.replace(/\D/g, '') ?? ''
+        const text = encodeURIComponent(
+          `Olá ${student!.name.split(' ')[0]}! Segue seu relatório de evolução. 💪\n\n_Gerado por GlePower_`,
+        )
+        const waUrl = phone
+          ? `https://wa.me/55${phone}?text=${text}`
+          : `https://wa.me/?text=${text}`
+
+        // Salva o PDF para download
+        const url = URL.createObjectURL(result.blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = result.filename
+        a.click()
+        URL.revokeObjectURL(url)
+
+        // Abre WhatsApp depois de 500ms para o download iniciar
+        setTimeout(() => window.open(waUrl, '_blank'), 500)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const handleExportPDF = async () => {
     if (!reportRef.current) return
     setExporting(true)
@@ -238,8 +299,17 @@ export function ProgressReportPage() {
           </Card>
         </div>
 
-        <Button onClick={handleExportPDF} disabled={exporting} className="mb-8">
-          {exporting ? 'Gerando PDF...' : '📄 Exportar PDF para o aluno'}
+        <Button onClick={handleExportPDF} disabled={exporting}>
+          {exporting ? 'Gerando PDF...' : 'Exportar PDF'}
+        </Button>
+
+        <Button
+          variant="secondary"
+          onClick={handleShareWhatsApp}
+          disabled={exporting}
+          className="mb-8"
+        >
+          Enviar via WhatsApp
         </Button>
       </PageContainer>
     </AppShell>

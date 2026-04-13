@@ -12,6 +12,9 @@ import { AnamnesisFormPage } from '@/features/anamnesis/AnamnesisFormPage'
 import { AssessmentListPage } from '@/features/assessments/AssessmentListPage'
 import { AssessmentFormPage } from '@/features/assessments/AssessmentFormPage'
 import { ProgressReportPage } from '@/features/assessments/ProgressReportPage'
+import { WorkoutPlanListPage } from '@/features/workout/WorkoutPlanListPage'
+import { WorkoutPlanFormPage } from '@/features/workout/WorkoutPlanFormPage'
+import { WorkoutExecutionPage } from '@/features/workout/WorkoutExecutionPage'
 import { WellnessPage } from '@/features/wellness/WellnessPage'
 import { WorkoutPage } from '@/features/workout/WorkoutPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
@@ -66,6 +69,15 @@ export function App() {
 
       case 'progress-report':
         return <ProgressReportPage />
+
+      case 'workout-plan-list':
+        return <WorkoutPlanListPage />
+
+      case 'workout-plan-form':
+        return <WorkoutPlanFormPage />
+
+      case 'workout-execution':
+        return <WorkoutExecutionPage />
 
       case 'wellness':
         return <WellnessPage />
