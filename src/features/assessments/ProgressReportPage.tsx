@@ -285,9 +285,19 @@ export function ProgressReportPage() {
                       <td className="py-1.5 text-text-muted">{m.label}</td>
                       {assessments.map((a, idx) => {
                         const v = a[m.key] as number | undefined
+                        const prev = idx > 0 ? assessments[idx - 1][m.key] as number | undefined : undefined
+                        const delta = v != null && prev != null ? v - prev : undefined
+                        // Para %G e RCQ, reduzir é bom; para massa magra, aumentar é bom
+                        const invertDelta = m.key === 'bodyFatPct' || m.key === 'whr' || m.key === 'circWaist'
+                        const isGood = delta != null ? (invertDelta ? delta < 0 : delta > 0) : null
                         return (
-                          <td key={idx} className="text-right py-1.5 text-white">
-                            {v !== undefined ? v.toFixed(1) : '—'}
+                          <td key={idx} className="text-right py-1.5">
+                            <span className="text-white">{v !== undefined ? v.toFixed(1) : '—'}</span>
+                            {delta != null && Math.abs(delta) >= 0.05 && (
+                              <span className={`block text-[9px] font-mono ${isGood ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {delta > 0 ? '▲' : '▼'}{Math.abs(delta).toFixed(1)}
+                              </span>
+                            )}
                           </td>
                         )
                       })}

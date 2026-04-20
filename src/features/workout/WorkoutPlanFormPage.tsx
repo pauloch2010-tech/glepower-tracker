@@ -296,8 +296,10 @@ export function WorkoutPlanFormPage() {
                     <input
                       type="number"
                       inputMode="numeric"
-                      value={ex.targetSets}
-                      onChange={(e) => updateExercise(idx, { targetSets: parseInt(e.target.value) || 1 })}
+                      value={ex.targetSets || ''}
+                      onChange={(e) => updateExercise(idx, { targetSets: parseInt(e.target.value) || 0 })}
+                      onBlur={(e) => { if (!parseInt(e.target.value)) updateExercise(idx, { targetSets: 1 }) }}
+                      onFocus={(e) => e.target.select()}
                       className="input-field mt-0.5 text-center"
                       min={1}
                     />
