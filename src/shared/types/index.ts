@@ -7,6 +7,7 @@ export type AppStep =
   | 'anamnesis'
   | 'assessment-list'
   | 'assessment-form'
+  | 'assessment-report'
   | 'progress-report'
   | 'workout-plan-list'
   | 'workout-plan-form'

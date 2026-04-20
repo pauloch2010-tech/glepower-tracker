@@ -11,6 +11,7 @@ import { StudentDetailPage } from '@/features/students/StudentDetailPage'
 import { AnamnesisFormPage } from '@/features/anamnesis/AnamnesisFormPage'
 import { AssessmentListPage } from '@/features/assessments/AssessmentListPage'
 import { AssessmentFormPage } from '@/features/assessments/AssessmentFormPage'
+import { AssessmentReportPage } from '@/features/assessments/AssessmentReportPage'
 import { ProgressReportPage } from '@/features/assessments/ProgressReportPage'
 import { WorkoutPlanListPage } from '@/features/workout/WorkoutPlanListPage'
 import { WorkoutPlanFormPage } from '@/features/workout/WorkoutPlanFormPage'
@@ -66,6 +67,9 @@ export function App() {
 
       case 'assessment-form':
         return <AssessmentFormPage />
+
+      case 'assessment-report':
+        return <AssessmentReportPage />
 
       case 'progress-report':
         return <ProgressReportPage />

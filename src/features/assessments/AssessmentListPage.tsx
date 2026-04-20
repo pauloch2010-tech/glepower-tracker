@@ -29,7 +29,12 @@ export function AssessmentListPage() {
     navigate('assessment-form')
   }
 
-  const handleOpen = (id: string) => {
+  const handleViewReport = (id: string) => {
+    setEditingAssessment(id)
+    navigate('assessment-report')
+  }
+
+  const handleEdit = (id: string) => {
     setEditingAssessment(id)
     navigate('assessment-form')
   }
@@ -75,43 +80,52 @@ export function AssessmentListPage() {
               const total = assessments.length
               const number = total - idx
               return (
-                <Card
-                  key={a.id}
-                  pressable
-                  onClick={() => handleOpen(a.id!)}
-                  className="flex items-center gap-4"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
-                    <span className="font-display text-lg italic font-black text-cyan-300">
-                      #{number}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white text-sm">
-                      {new Date(a.assessmentDate).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
-                    <p className="text-[11px] text-text-muted mt-0.5">
-                      {PROTOCOL_LABELS[a.protocol]}
-                    </p>
-                    <div className="flex gap-3 mt-1.5 font-mono text-[11px]">
-                      <span className="text-text-muted">
-                        Peso <span className="text-white">{a.weightKg?.toFixed(1) ?? '—'}kg</span>
-                      </span>
-                      <span className="text-text-muted">
-                        %G <span className="text-white">{a.bodyFatPct?.toFixed(1) ?? '—'}%</span>
-                      </span>
-                      <span className="text-text-muted">
-                        IMC <span className="text-white">{a.bmi?.toFixed(1) ?? '—'}</span>
+                <Card key={a.id} className="flex flex-col gap-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
+                      <span className="font-display text-lg italic font-black text-cyan-300">
+                        #{number}
                       </span>
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm">
+                        {new Date(a.assessmentDate).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </p>
+                      <p className="text-[11px] text-text-muted mt-0.5">
+                        {PROTOCOL_LABELS[a.protocol]}
+                      </p>
+                      <div className="flex gap-3 mt-1.5 font-mono text-[11px]">
+                        <span className="text-text-muted">
+                          Peso <span className="text-white">{a.weightKg?.toFixed(1) ?? '—'}kg</span>
+                        </span>
+                        <span className="text-text-muted">
+                          %G <span className="text-white">{a.bodyFatPct?.toFixed(1) ?? '—'}%</span>
+                        </span>
+                        <span className="text-text-muted">
+                          IMC <span className="text-white">{a.bmi?.toFixed(1) ?? '—'}</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <svg className="w-5 h-5 text-text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  {/* Ações */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleViewReport(a.id!)}
+                      className="flex-1 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-medium hover:bg-cyan-500/20 transition-all"
+                    >
+                      Ver Relatório
+                    </button>
+                    <button
+                      onClick={() => handleEdit(a.id!)}
+                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-text-muted text-xs hover:bg-white/10 transition-all"
+                    >
+                      Editar
+                    </button>
+                  </div>
                 </Card>
               )
             })}
