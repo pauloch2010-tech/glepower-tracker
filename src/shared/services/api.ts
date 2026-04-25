@@ -74,7 +74,7 @@ async function supabaseLogin(pin: string): Promise<ApiResponse<AuthSession>> {
 async function supabaseGetStudents(): Promise<ApiResponse<Student[]>> {
   const { data, error } = await supabase
     .from('students')
-    .select('id, name, level, sex, phone, email, birth_date, height_m, goal, active, created_at')
+    .select('id, name, level, sex, phone, email, birth_date, height_m, goal, active, anamnesis_token, anamnesis_pending_review, created_at')
     .eq('active', true)
     .order('name')
 
@@ -91,6 +91,8 @@ async function supabaseGetStudents(): Promise<ApiResponse<Student[]>> {
     heightM: (row.height_m as number) ?? undefined,
     goal: (row.goal as string) ?? undefined,
     active: row.active as boolean,
+    anamnesisToken: (row.anamnesis_token as string) ?? undefined,
+    anamnesisPendingReview: (row.anamnesis_pending_review as boolean) ?? false,
   }))
 
   return { success: true, data: students }
@@ -595,6 +597,95 @@ async function supabaseUpdateExecution(id: string, updates: Partial<WorkoutExecu
   return { success: true, data: dbToExecution(data as Record<string, unknown>) }
 }
 
+// ─── Anamnese Cliente (token público) ────────────────────────────────────────
+
+/** Busca aluno pelo token de anamnese (sem autenticação) */
+async function supabaseGetStudentByToken(token: string): Promise<ApiResponse<Student | null>> {
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, name, anamnesis_token, anamnesis_pending_review')
+    .eq('anamnesis_token', token)
+    .maybeSingle()
+
+  if (error) return { success: false, error: error.message }
+  if (!data) return { success: true, data: null }
+
+  return {
+    success: true,
+    data: {
+      id: data.id as string,
+      name: data.name as string,
+      anamnesisToken: data.anamnesis_token as string,
+      anamnesisPendingReview: data.anamnesis_pending_review as boolean,
+    },
+  }
+}
+
+/** Salva dados preenchidos pelo cliente e marca pending review */
+async function supabaseSaveClientAnamnesis(
+  studentId: string,
+  clientData: Record<string, unknown>,
+): Promise<ApiResponse<void>> {
+  const { error } = await supabase
+    .from('anamnesis')
+    .upsert(
+      {
+        student_id: studentId,
+        client_data: clientData,
+        submitted_by_client: true,
+        client_submitted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'student_id' },
+    )
+
+  if (error) return { success: false, error: error.message }
+
+  // Marca pending review no aluno
+  const { error: e2 } = await supabase
+    .from('students')
+    .update({ anamnesis_pending_review: true })
+    .eq('id', studentId)
+
+  if (e2) return { success: false, error: e2.message }
+  return { success: true }
+}
+
+/** Gera (ou retorna existente) o token de anamnese para um aluno */
+async function supabaseEnsureAnamnesisToken(studentId: string): Promise<ApiResponse<string>> {
+  // Lê token existente
+  const { data, error } = await supabase
+    .from('students')
+    .select('anamnesis_token')
+    .eq('id', studentId)
+    .single()
+
+  if (error) return { success: false, error: error.message }
+
+  if (data?.anamnesis_token) return { success: true, data: data.anamnesis_token as string }
+
+  // Gera novo UUID via crypto
+  const token = crypto.randomUUID()
+  const { error: e2 } = await supabase
+    .from('students')
+    .update({ anamnesis_token: token })
+    .eq('id', studentId)
+
+  if (e2) return { success: false, error: e2.message }
+  return { success: true, data: token }
+}
+
+/** Limpa a flag de pending review após o trainer abrir a anamnese */
+async function supabaseClearPendingReview(studentId: string): Promise<ApiResponse<void>> {
+  const { error } = await supabase
+    .from('students')
+    .update({ anamnesis_pending_review: false })
+    .eq('id', studentId)
+
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
 // ─── Legacy GAS caller (fallback when no Supabase) ───────────────────────────
 const SCRIPT_URL = import.meta.env.VITE_API_URL ?? ''
 const TIMEOUT_MS = 10_000
@@ -716,6 +807,24 @@ export const api = {
   updateExecution(id: string, updates: Partial<WorkoutExecution>): Promise<ApiResponse<WorkoutExecution>> {
     if (USE_SUPABASE) return supabaseUpdateExecution(id, updates)
     return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+
+  // ─── Anamnese cliente (token público) ────────────────────────────────────
+  getStudentByToken(token: string): Promise<ApiResponse<Student | null>> {
+    if (USE_SUPABASE) return supabaseGetStudentByToken(token)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  saveClientAnamnesis(studentId: string, clientData: Record<string, unknown>): Promise<ApiResponse<void>> {
+    if (USE_SUPABASE) return supabaseSaveClientAnamnesis(studentId, clientData)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  ensureAnamnesisToken(studentId: string): Promise<ApiResponse<string>> {
+    if (USE_SUPABASE) return supabaseEnsureAnamnesisToken(studentId)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  clearPendingReview(studentId: string): Promise<ApiResponse<void>> {
+    if (USE_SUPABASE) return supabaseClearPendingReview(studentId)
+    return Promise.resolve({ success: true })
   },
 
   async saveSession(session: WorkoutSession): Promise<ApiResponse<void>> {

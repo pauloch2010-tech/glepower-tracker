@@ -42,6 +42,8 @@ export interface Student {
   goal?: string
   lastSession?: string
   active?: boolean
+  anamnesisToken?: string
+  anamnesisPendingReview?: boolean
 }
 
 // ─── Anamnese ────────────────────────────────────────────────────────────────

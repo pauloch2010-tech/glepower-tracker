@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { SessionProvider } from '@/shared/store/SessionContext'
 import { ToastProvider } from '@/shared/components/feedback/Toast'
 import { ErrorBoundary } from '@/shared/components/feedback/ErrorBoundary'
+import { LangProvider } from '@/shared/i18n/LangContext'
 
 interface ProvidersProps {
   children: ReactNode
@@ -14,11 +15,13 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <ErrorBoundary>
-      <SessionProvider>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
-      </SessionProvider>
+      <LangProvider>
+        <SessionProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </SessionProvider>
+      </LangProvider>
     </ErrorBoundary>
   )
 }

@@ -7,6 +7,8 @@ import { Button } from '@/shared/components/ui/Button'
 import { api } from '@/shared/services/api'
 import type { Anamnesis, PhysicalAssessment, WorkoutPlan, WorkoutExecution } from '@/shared/types'
 
+const APP_URL = window.location.origin
+
 export function StudentDetailPage() {
   const { state, navigate, setEditingStudent, setEditingAssessment } = useSession()
   const student = state.student
@@ -15,6 +17,8 @@ export function StudentDetailPage() {
   const [plans, setPlans] = useState<WorkoutPlan[]>([])
   const [executions, setExecutions] = useState<WorkoutExecution[]>([])
   const [loading, setLoading] = useState(true)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [pendingReview, setPendingReview] = useState(false)
 
   useEffect(() => {
     if (!student) return
@@ -29,6 +33,8 @@ export function StudentDetailPage() {
       if (asRes.success && asRes.data) setAssessments(asRes.data)
       if (pRes.success && pRes.data) setPlans(pRes.data)
       if (eRes.success && eRes.data) setExecutions(eRes.data)
+      // Pending review flag comes from student object (refreshed from session)
+      setPendingReview(student.anamnesisPendingReview ?? false)
       setLoading(false)
     })
   }, [student])
@@ -48,6 +54,34 @@ export function StudentDetailPage() {
   const activePlans = plans.filter((p) => p.active)
   const completedExecs = executions.filter((e) => e.status === 'completed')
   const inProgressExec = executions.find((e) => e.status === 'in_progress')
+
+  const handleGenerateLink = async () => {
+    const res = await api.ensureAnamnesisToken(student.id)
+    if (!res.success || !res.data) return
+    const link = `${APP_URL}?token=${res.data}`
+    await navigator.clipboard.writeText(link)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 3000)
+  }
+
+  const handleShareLinkWhatsApp = async () => {
+    const res = await api.ensureAnamnesisToken(student.id)
+    if (!res.success || !res.data) return
+    const link = `${APP_URL}?token=${res.data}`
+    const firstName = student.name.split(' ')[0]
+    const text = encodeURIComponent(`Olá ${firstName}! Clique no link para preencher sua ficha de anamnese:\n${link}`)
+    const phone = student.phone?.replace(/\D/g, '') ?? ''
+    const url = phone ? `https://wa.me/55${phone}?text=${text}` : `https://wa.me/?text=${text}`
+    window.open(url, '_blank')
+  }
+
+  const handleOpenAnamnesis = () => {
+    // Clear pending review flag when trainer opens
+    if (pendingReview) {
+      api.clearPendingReview(student.id).then(() => setPendingReview(false))
+    }
+    navigate('anamnesis')
+  }
 
   const handleStartWorkout = () => navigate('workout-plan-list')
   const handleEditStudent = () => {
@@ -106,7 +140,7 @@ export function StudentDetailPage() {
         <div className="grid grid-cols-2 gap-3">
           {/* Anamnese */}
           <button
-            onClick={() => navigate('anamnesis')}
+            onClick={handleOpenAnamnesis}
             className="relative flex flex-col items-start gap-2 p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-rose-500/10 to-rose-500/[0.02] hover:border-rose-500/40 transition-all text-left"
           >
             <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
@@ -116,10 +150,19 @@ export function StudentDetailPage() {
             </div>
             <p className="font-semibold text-white text-sm">Anamnese</p>
             <p className="text-[11px] text-text-muted leading-tight">
-              {loading ? '...' : hasAnamnesis ? 'Preenchida' : 'Pendente'}
+              {loading
+                ? '...'
+                : pendingReview
+                ? 'Aguardando revisão'
+                : hasAnamnesis
+                ? 'Preenchida'
+                : 'Pendente'}
             </p>
-            {!loading && !hasAnamnesis && (
+            {!loading && !hasAnamnesis && !pendingReview && (
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+            )}
+            {!loading && pendingReview && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             )}
           </button>
 
@@ -190,6 +233,44 @@ export function StudentDetailPage() {
             </div>
           </Card>
         )}
+
+        {/* Alerta de revisão pendente */}
+        {!loading && pendingReview && (
+          <button
+            onClick={handleOpenAnamnesis}
+            className="w-full text-left"
+          >
+            <Card className="border-emerald-500/40 bg-emerald-500/10">
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                <p className="text-xs text-emerald-200">
+                  <strong>{student.name.split(' ')[0]}</strong> respondeu a anamnese — clique para revisar
+                </p>
+              </div>
+            </Card>
+          </button>
+        )}
+
+        {/* Link para cliente */}
+        <Card className="border-white/[0.06]">
+          <p className="text-[10px] uppercase tracking-widest text-text-muted mb-3">
+            Link de Anamnese para o Cliente
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleGenerateLink}
+              className="flex-1 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-text-muted hover:bg-white/10 hover:text-white transition-all font-medium"
+            >
+              {linkCopied ? '✓ Link copiado!' : '📋 Copiar link'}
+            </button>
+            <button
+              onClick={handleShareLinkWhatsApp}
+              className="flex-1 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 hover:bg-emerald-500/20 transition-all font-medium"
+            >
+              WhatsApp
+            </button>
+          </div>
+        </Card>
 
         {/* Resumo última avaliação */}
         {latestAssessment && (
