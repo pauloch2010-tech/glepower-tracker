@@ -9,6 +9,7 @@ import { StudentSelectPage } from '@/features/students/StudentSelectPage'
 import { StudentFormPage } from '@/features/students/StudentFormPage'
 import { StudentDetailPage } from '@/features/students/StudentDetailPage'
 import { AnamnesisFormPage } from '@/features/anamnesis/AnamnesisFormPage'
+import { AnamnesisClientPage } from '@/features/anamnesis/AnamnesisClientPage'
 import { AssessmentListPage } from '@/features/assessments/AssessmentListPage'
 import { AssessmentFormPage } from '@/features/assessments/AssessmentFormPage'
 import { AssessmentReportPage } from '@/features/assessments/AssessmentReportPage'
@@ -22,14 +23,23 @@ import { ReviewPage } from '@/features/review/ReviewPage'
 import { SuccessPage } from '@/features/success/SuccessPage'
 import { ProgressPage } from '@/features/progress/ProgressPage'
 
+// Detected once at module load — no re-evaluation needed
+const CLIENT_TOKEN = new URLSearchParams(window.location.search).get('token')
+
 export function App() {
   const { state, navigate, setEditingStudent } = useSession()
 
   // Inicia o processador de fila offline (flush automático ao voltar online)
   useEffect(() => {
+    if (CLIENT_TOKEN) return   // cliente externo: não precisa de queue
     const stop = startQueueProcessor()
     return stop
   }, [])
+
+  // ── Formulário público do cliente (sem auth) ───────────────────────────────
+  if (CLIENT_TOKEN) {
+    return <AnamnesisClientPage token={CLIENT_TOKEN} />
+  }
 
   const goToStudentSelect = () => navigate('student-select')
   const goToStudentDetail = () => navigate('student-detail')
