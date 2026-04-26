@@ -19,6 +19,7 @@ export function StudentDetailPage() {
   const [loading, setLoading] = useState(true)
   const [linkCopied, setLinkCopied] = useState(false)
   const [pendingReview, setPendingReview] = useState(false)
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null)
 
   useEffect(() => {
     if (!student) return
@@ -59,9 +60,14 @@ export function StudentDetailPage() {
     const res = await api.ensureAnamnesisToken(student.id)
     if (!res.success || !res.data) return
     const link = `${APP_URL}?token=${res.data}`
-    await navigator.clipboard.writeText(link)
-    setLinkCopied(true)
-    setTimeout(() => setLinkCopied(false), 3000)
+    setGeneratedLink(link)
+    try {
+      await navigator.clipboard.writeText(link)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 3000)
+    } catch {
+      // fallback: mostra modal para copiar manualmente
+    }
   }
 
   const handleShareLinkWhatsApp = async () => {
@@ -270,6 +276,29 @@ export function StudentDetailPage() {
               WhatsApp
             </button>
           </div>
+
+          {/* Fallback mobile: exibe o link para copiar manualmente */}
+          {generatedLink && !linkCopied && (
+            <div className="mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">
+              <p className="text-[10px] text-text-muted mb-1.5 uppercase tracking-wider">Copie o link abaixo:</p>
+              <p
+                className="text-[11px] text-cyan-300 break-all font-mono leading-relaxed cursor-pointer select-all"
+                onClick={() => {
+                  const el = document.createElement('textarea')
+                  el.value = generatedLink
+                  document.body.appendChild(el)
+                  el.select()
+                  document.execCommand('copy')
+                  document.body.removeChild(el)
+                  setLinkCopied(true)
+                  setTimeout(() => setLinkCopied(false), 3000)
+                }}
+              >
+                {generatedLink}
+              </p>
+              <p className="text-[9px] text-text-muted mt-1">Toque no link para copiar</p>
+            </div>
+          )}
         </Card>
 
         {/* Resumo última avaliação */}

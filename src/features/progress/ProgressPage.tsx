@@ -1,7 +1,7 @@
 // src/features/progress/ProgressPage.tsx
 // Dashboard de progressão com 3 tabs: Resumo | Exercícios | Músculos
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   BarChart,
   Bar,
@@ -16,6 +16,8 @@ import {
   Legend,
 } from "recharts";
 import { useProgressData } from "./useProgressData";
+import { api } from "@/shared/services/api";
+import type { WorkoutExecution } from "@/shared/types";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -61,7 +63,18 @@ const BarTooltip = ({ active, payload, label }: any) => {
 
 export function ProgressPage({ studentId, studentName, onBack }: ProgressPageProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("resumo");
-  const data = useProgressData(studentId);
+  const [executions, setExecutions] = useState<WorkoutExecution[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    if (!studentId) { setDataLoading(false); return; }
+    api.listExecutions(studentId).then((res) => {
+      if (res.success && res.data) setExecutions(res.data);
+      setDataLoading(false);
+    });
+  }, [studentId]);
+
+  const data = useProgressData(executions);
 
   const tabs: { id: ActiveTab; label: string; icon: ReactNode }[] = [
     {
@@ -140,13 +153,13 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-xs text-white/40 mb-1">Volume Total</p>
                 <p className="text-3xl font-bold text-primary">
-                  {data.totalVolumeTons > 0 ? `${data.totalVolumeTons}t` : "—"}
+                  {dataLoading ? "..." : data.totalVolumeTons > 0 ? `${data.totalVolumeTons}t` : "—"}
                 </p>
                 <p className="text-xs text-white/30 mt-1">últimas 8 semanas</p>
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-xs text-white/40 mb-1">Sessões</p>
-                <p className="text-3xl font-bold text-primary">{data.totalSessions}</p>
+                <p className="text-3xl font-bold text-primary">{dataLoading ? "..." : data.totalSessions}</p>
                 <p className="text-xs text-white/30 mt-1">treinos registrados</p>
               </div>
             </div>
@@ -156,7 +169,11 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
               <h3 className="font-bold text-white mb-1">Volume Semanal Total</h3>
               <p className="text-xs text-white/40 mb-4">Últimas 8 semanas (em toneladas)</p>
 
-              {data.totalSessions === 0 ? (
+              {dataLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : data.totalSessions === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-white/25">
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
                     <path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />

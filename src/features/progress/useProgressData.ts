@@ -1,140 +1,98 @@
 // src/features/progress/useProgressData.ts
-// Hook que processa sessões salvas e calcula métricas para o dashboard
+// Hook que processa execuções do Supabase e calcula métricas para o dashboard
 
-import { useMemo } from "react";
+import { useMemo } from 'react'
+import type { WorkoutExecution } from '@/shared/types'
 
-export interface SavedSet {
-  reps: string;
-  weight: string;
+// ─── Interfaces de saída ──────────────────────────────────────────────────────
+
+export interface WeeklyVolume {
+  label: string
+  volume: number   // em toneladas (kg/1000)
+  isCurrent: boolean
 }
 
-export interface SavedExercise {
-  exerciseName: string;
-  muscleGroup: string;
-  subGroup: string;
-  sets: SavedSet[];
+export interface ExerciseProgress {
+  name: string
+  muscleGroup: string
+  data: Array<{ date: string; maxLoad: number; avgLoad: number }>
 }
 
-export interface SavedSession {
-  id: string;
-  studentId: string;
-  date: string; // ISO string
-  exercises: SavedExercise[];
+export interface MuscleGroupStats {
+  name: string
+  series: number
+  maxSeries: number
+}
+
+export interface ProgressData {
+  totalVolumeTons: number
+  totalSessions: number
+  weeklyVolume: WeeklyVolume[]
+  exerciseProgress: ExerciseProgress[]
+  muscleGroupStats: MuscleGroupStats[]
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function loadSessions(studentId: string): SavedSession[] {
-  try {
-    const raw = localStorage.getItem(`gle_sessions_${studentId}`);
-    if (!raw) return [];
-    return JSON.parse(raw) as SavedSession[];
-  } catch {
-    return [];
-  }
-}
-
-export function saveSessions(studentId: string, sessions: SavedSession[]) {
-  localStorage.setItem(`gle_sessions_${studentId}`, JSON.stringify(sessions));
-}
-
-function parseWeight(w: string): number {
-  const n = parseFloat(w);
-  return isNaN(n) ? 0 : n;
-}
-
-function parseReps(r: string): number {
-  const n = parseInt(r, 10);
-  return isNaN(n) ? 0 : n;
+function startOfWeek(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() - day)
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
 function getWeekLabel(date: Date): string {
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-}
-
-function startOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
 // ─── Hook principal ───────────────────────────────────────────────────────────
+// Aceita WorkoutExecution[] já carregadas — o fetch é feito pelo componente pai.
 
-export interface WeeklyVolume {
-  label: string;
-  volume: number; // em toneladas (kg/1000)
-  isCurrent: boolean;
-}
-
-export interface ExerciseProgress {
-  name: string;
-  muscleGroup: string;
-  data: Array<{ date: string; maxLoad: number; avgLoad: number }>;
-}
-
-export interface MuscleGroupStats {
-  name: string;
-  series: number;
-  maxSeries: number; // para calcular a barra
-}
-
-export interface ProgressData {
-  totalVolumeTons: number;
-  totalSessions: number;
-  weeklyVolume: WeeklyVolume[];
-  exerciseProgress: ExerciseProgress[];
-  muscleGroupStats: MuscleGroupStats[];
-}
-
-export function useProgressData(studentId: string): ProgressData {
+export function useProgressData(executions: WorkoutExecution[]): ProgressData {
   return useMemo(() => {
-    const sessions = loadSessions(studentId);
-    const now = new Date();
-    const eightWeeksAgo = new Date(now);
-    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    const now = new Date()
+    const eightWeeksAgo = new Date(now)
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56)
 
-    // Filtra últimas 8 semanas
-    const recent = sessions.filter((s) => new Date(s.date) >= eightWeeksAgo);
+    // Apenas execuções concluídas nas últimas 8 semanas
+    const recent = executions.filter(
+      (e) => e.status === 'completed' && new Date(e.date) >= eightWeeksAgo,
+    )
 
-    // ── Totais ──
-    let totalVolumeKg = 0;
-    recent.forEach((s) => {
-      s.exercises.forEach((ex) => {
-        ex.sets.forEach((set) => {
-          totalVolumeKg += parseWeight(set.weight) * parseReps(set.reps);
-        });
-      });
-    });
+    // ── Totais ──────────────────────────────────────────────────────────────
+    let totalVolumeKg = 0
+    recent.forEach((exec) => {
+      exec.exercises.forEach((ex) => {
+        ex.sets.forEach((s) => {
+          if (s.completed) totalVolumeKg += (s.weight ?? 0) * (s.reps ?? 0)
+        })
+      })
+    })
 
-    // ── Volume semanal ──
-    const weekMap = new Map<string, { volume: number; weekStart: Date }>();
-
-    // Cria as 8 semanas (mesmo sem dados)
+    // ── Volume semanal (8 semanas) ───────────────────────────────────────────
+    const weekMap = new Map<string, { volume: number; weekStart: Date }>()
     for (let i = 7; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i * 7);
-      const ws = startOfWeek(d);
-      const key = ws.toISOString();
-      if (!weekMap.has(key)) {
-        weekMap.set(key, { volume: 0, weekStart: ws });
-      }
+      const d = new Date(now)
+      d.setDate(d.getDate() - i * 7)
+      const ws = startOfWeek(d)
+      const key = ws.toISOString()
+      if (!weekMap.has(key)) weekMap.set(key, { volume: 0, weekStart: ws })
     }
 
-    recent.forEach((s) => {
-      const ws = startOfWeek(new Date(s.date));
-      const key = ws.toISOString();
-      const entry = weekMap.get(key) || { volume: 0, weekStart: ws };
-      s.exercises.forEach((ex) => {
-        ex.sets.forEach((set) => {
-          entry.volume += parseWeight(set.weight) * parseReps(set.reps);
-        });
-      });
-      weekMap.set(key, entry);
-    });
+    recent.forEach((exec) => {
+      const ws = startOfWeek(new Date(exec.date))
+      const key = ws.toISOString()
+      const entry = weekMap.get(key) ?? { volume: 0, weekStart: ws }
+      exec.exercises.forEach((ex) => {
+        ex.sets.forEach((s) => {
+          if (s.completed) entry.volume += (s.weight ?? 0) * (s.reps ?? 0)
+        })
+      })
+      weekMap.set(key, entry)
+    })
 
-    const currentWeekStart = startOfWeek(now).toISOString();
+    const currentWeekStart = startOfWeek(now).toISOString()
     const weeklyVolume: WeeklyVolume[] = Array.from(weekMap.values())
       .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
       .slice(-8)
@@ -142,69 +100,59 @@ export function useProgressData(studentId: string): ProgressData {
         label: getWeekLabel(w.weekStart),
         volume: parseFloat((w.volume / 1000).toFixed(2)),
         isCurrent: w.weekStart.toISOString() === currentWeekStart,
-      }));
+      }))
 
-    // ── Progressão por exercício ──
-    const exerciseMap = new Map<string, ExerciseProgress>();
+    // ── Progressão por exercício ─────────────────────────────────────────────
+    const exerciseMap = new Map<string, ExerciseProgress>()
 
-    sessions
+    ;[...executions]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .forEach((s) => {
-        s.exercises.forEach((ex) => {
-          if (!ex.exerciseName) return;
-
-          const key = ex.exerciseName;
-          if (!exerciseMap.has(key)) {
-            exerciseMap.set(key, {
+      .filter((e) => e.status === 'completed')
+      .forEach((exec) => {
+        exec.exercises.forEach((ex) => {
+          if (!ex.exerciseName) return
+          if (!exerciseMap.has(ex.exerciseName)) {
+            exerciseMap.set(ex.exerciseName, {
               name: ex.exerciseName,
               muscleGroup: ex.subGroup || ex.muscleGroup,
               data: [],
-            });
+            })
           }
-
           const loads = ex.sets
-            .map((set) => parseWeight(set.weight))
-            .filter((w) => w > 0);
+            .filter((s) => s.completed && (s.weight ?? 0) > 0)
+            .map((s) => s.weight ?? 0)
+          if (loads.length === 0) return
 
-          if (loads.length === 0) return;
+          const maxLoad = Math.max(...loads)
+          const avgLoad = parseFloat((loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1))
+          const dateLabel = new Date(exec.date).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: 'short',
+          })
+          exerciseMap.get(ex.exerciseName)!.data.push({ date: dateLabel, maxLoad, avgLoad })
+        })
+      })
 
-          const maxLoad = Math.max(...loads);
-          const avgLoad = parseFloat(
-            (loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1)
-          );
+    const exerciseProgress = Array.from(exerciseMap.values()).filter((e) => e.data.length >= 1)
 
-          const dateLabel = new Date(s.date).toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "short",
-          });
+    // ── Volume por grupo muscular (últimas 4 semanas) ───────────────────────
+    const fourWeeksAgo = new Date(now)
+    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28)
 
-          exerciseMap.get(key)!.data.push({ date: dateLabel, maxLoad, avgLoad });
-        });
-      });
+    const muscleMap = new Map<string, number>()
+    executions
+      .filter((e) => e.status === 'completed' && new Date(e.date) >= fourWeeksAgo)
+      .forEach((exec) => {
+        exec.exercises.forEach((ex) => {
+          const group = ex.subGroup || ex.muscleGroup || 'Outros'
+          muscleMap.set(group, (muscleMap.get(group) ?? 0) + ex.sets.filter((s) => s.completed).length)
+        })
+      })
 
-    // Filtra exercícios com pelo menos 1 ponto de dados
-    const exerciseProgress = Array.from(exerciseMap.values()).filter(
-      (ex) => ex.data.length >= 1
-    );
-
-    // ── Volume por grupo muscular (últimas 4 semanas) ──
-    const fourWeeksAgo = new Date(now);
-    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
-
-    const muscleMap = new Map<string, number>();
-    sessions
-      .filter((s) => new Date(s.date) >= fourWeeksAgo)
-      .forEach((s) => {
-        s.exercises.forEach((ex) => {
-          const group = ex.subGroup || ex.muscleGroup || "Outros";
-          muscleMap.set(group, (muscleMap.get(group) || 0) + ex.sets.length);
-        });
-      });
-
-    const maxSeries = Math.max(1, ...muscleMap.values());
+    const maxSeries = Math.max(1, ...muscleMap.values())
     const muscleGroupStats: MuscleGroupStats[] = Array.from(muscleMap.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([name, series]) => ({ name, series, maxSeries }));
+      .map(([name, series]) => ({ name, series, maxSeries }))
 
     return {
       totalVolumeTons: parseFloat((totalVolumeKg / 1000).toFixed(1)),
@@ -212,6 +160,6 @@ export function useProgressData(studentId: string): ProgressData {
       weeklyVolume,
       exerciseProgress,
       muscleGroupStats,
-    };
-  }, [studentId]);
+    }
+  }, [executions])
 }

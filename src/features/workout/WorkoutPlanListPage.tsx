@@ -279,13 +279,13 @@ export function WorkoutPlanListPage() {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="grid grid-cols-3 gap-2 text-center mb-3">
                         <div>
                           <p className="text-[10px] uppercase text-text-muted">Exerc.</p>
                           <p className="font-mono text-sm text-white">{exec.exercises.length}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] uppercase text-text-muted">Series</p>
+                          <p className="text-[10px] uppercase text-text-muted">Séries</p>
                           <p className="font-mono text-sm text-white">{completedSets}/{totalSets}</p>
                         </div>
                         <div>
@@ -293,6 +293,40 @@ export function WorkoutPlanListPage() {
                           <p className="font-mono text-sm text-white">{totalVolume > 0 ? `${totalVolume.toFixed(0)}kg` : '—'}</p>
                         </div>
                       </div>
+
+                      {/* Painel de desempenho */}
+                      {isCompleted && (() => {
+                        const pct = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0
+                        const allRpes = exec.exercises.flatMap((e) =>
+                          e.sets.filter((s) => s.completed && s.rpe).map((s) => s.rpe as number),
+                        )
+                        const avgRpe = allRpes.length > 0
+                          ? Math.round(allRpes.reduce((a, b) => a + b, 0) / allRpes.length)
+                          : null
+                        const scoreColor = pct >= 90 ? 'text-emerald-400' : pct >= 70 ? 'text-amber-400' : 'text-rose-400'
+                        const barColor = pct >= 90 ? 'bg-emerald-500' : pct >= 70 ? 'bg-amber-500' : 'bg-rose-500'
+                        return (
+                          <div className="mt-1 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <p className="text-[10px] uppercase tracking-wider text-text-muted">Desempenho</p>
+                              <div className="flex items-center gap-2">
+                                {avgRpe !== null && (
+                                  <span className="text-[10px] text-text-muted">
+                                    RPE médio: <span className="text-white font-mono">{avgRpe}/10</span>
+                                  </span>
+                                )}
+                                <span className={`text-sm font-bold font-mono ${scoreColor}`}>{pct}%</span>
+                              </div>
+                            </div>
+                            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${barColor}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {!isCompleted && (
                         <Button
