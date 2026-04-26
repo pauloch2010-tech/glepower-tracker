@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useSession } from '@/shared/store/SessionContext'
 import { useToast } from '@/shared/components/feedback/Toast'
 import { api } from '@/shared/services/api'
-import { saveSessions } from '@/features/progress/useProgressData'
-import type { SavedSession } from '@/features/progress/useProgressData'
 import { AppShell } from '@/shared/components/layout/AppShell'
 import { PageContainer } from '@/shared/components/layout/PageContainer'
 import { Card, CardHeader, CardBody } from '@/shared/components/ui/Card'
@@ -125,43 +123,9 @@ export function ReviewPage() {
   const { showToast } = useToast()
   const [saving, setSaving] = useState(false)
 
-  const saveToLocalStorage = () => {
-    if (!state.workout) return
-    try {
-      const key = `gle_sessions_${state.workout.studentId}`
-      let existing: SavedSession[] = []
-      try {
-        existing = JSON.parse(localStorage.getItem(key) ?? '[]')
-      } catch { existing = [] }
-
-      const session: SavedSession = {
-        id: state.workout.id,
-        studentId: state.workout.studentId,
-        date: state.workout.date,
-        exercises: state.workout.exercises
-          .filter((ex) => ex.exerciseName)
-          .map((ex) => ({
-            exerciseName: ex.exerciseName,
-            muscleGroup: ex.muscleGroup,
-            subGroup: ex.subGroup ?? '',
-            sets: ex.sets
-              .filter((s) => s.completed)
-              .map((s) => ({
-                reps: s.reps?.toString() ?? '',
-                weight: s.weight?.toString() ?? '',
-              })),
-          })),
-      }
-      saveSessions(state.workout.studentId, [...existing, session])
-    } catch {
-      // falha silenciosa — dados já enviados ao GAS
-    }
-  }
-
   const handleSave = async () => {
     if (!state.workout) return
     setSaving(true)
-    saveToLocalStorage()
 
     try {
       const res = await api.saveSession(state.workout)

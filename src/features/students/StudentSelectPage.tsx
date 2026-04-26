@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from '@/shared/store/SessionContext'
+import { useLang } from '@/shared/i18n/LangContext'
+import type { Lang } from '@/shared/i18n/translations'
 import { AppShell } from '@/shared/components/layout/AppShell'
 import { PageContainer } from '@/shared/components/layout/PageContainer'
 import { Card } from '@/shared/components/ui/Card'
@@ -67,6 +69,7 @@ function StudentCard({
 
 export function StudentSelectPage() {
   const { selectStudent, setEditingStudent, navigate, logout, state } = useSession()
+  const { lang, setLang } = useLang()
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -122,7 +125,20 @@ export function StudentSelectPage() {
           {state.auth?.trainerName ?? 'Treinadora'}
         </h2>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
+        {/* Seletor de idioma */}
+        {(['pt', 'en', 'es'] as Lang[]).map((code) => (
+          <button
+            key={code}
+            onClick={() => setLang(code)}
+            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded transition-colors ${
+              lang === code ? 'text-white bg-white/10' : 'text-text-muted hover:text-white'
+            }`}
+          >
+            {code.toUpperCase()}
+          </button>
+        ))}
+        <span className="w-px h-3 bg-white/10 mx-0.5" />
         <Button variant="ghost" size="sm" onClick={handleNewStudent} aria-label="Cadastrar aluno">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
