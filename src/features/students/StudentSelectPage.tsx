@@ -12,6 +12,8 @@ import { api } from '@/shared/services/api'
 import { whatsappUrl } from '@/shared/utils/phone'
 import type { Student } from '@/shared/types'
 
+const APP_URL = window.location.origin
+
 function StudentCard({
   student,
   isSelected,
@@ -58,11 +60,22 @@ function StudentCard({
         )}
       </div>
 
-      {student.level && (
-        <Badge variant={isSelected ? 'primary' : 'secondary'} size="sm">
-          {student.level}
-        </Badge>
-      )}
+      <div className="flex flex-col items-end gap-1">
+        {student.anamnesisPendingReview && (
+          <span
+            className="flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 uppercase tracking-wider"
+            title="Cliente respondeu anamnese — aguardando revisão"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Nova anamnese
+          </span>
+        )}
+        {student.level && (
+          <Badge variant={isSelected ? 'primary' : 'secondary'} size="sm">
+            {student.level}
+          </Badge>
+        )}
+      </div>
     </Card>
   )
 }
@@ -74,6 +87,9 @@ export function StudentSelectPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null)
+  const [linkLoading, setLinkLoading] = useState(false)
 
   const loadStudents = () => {
     setLoading(true)
@@ -115,6 +131,34 @@ export function StudentSelectPage() {
     if (!selectedStudent) return
     setEditingStudent(selectedStudent)
     navigate('student-form')
+  }
+
+  const handleSendLink = async () => {
+    if (!selectedStudent) return
+    setLinkLoading(true)
+    setGeneratedLink(null)
+    const res = await api.ensureAnamnesisToken(selectedStudent.id)
+    setLinkLoading(false)
+    if (!res.success || !res.data) return
+    const url = `${APP_URL}/?token=${res.data}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2500)
+    } catch {
+      setGeneratedLink(url)
+    }
+  }
+
+  const handleSendLinkWhatsApp = async () => {
+    if (!selectedStudent?.phone) return
+    setLinkLoading(true)
+    const res = await api.ensureAnamnesisToken(selectedStudent.id)
+    setLinkLoading(false)
+    if (!res.success || !res.data) return
+    const url = `${APP_URL}/?token=${res.data}`
+    const msg = `Olá ${selectedStudent.name.split(' ')[0]}! Por favor preencha sua anamnese: ${url}`
+    window.open(whatsappUrl(selectedStudent.phone, msg), '_blank')
   }
 
   const header = (
@@ -218,7 +262,50 @@ export function StudentSelectPage() {
                 Iniciar Treino
               </Button>
             </div>
-            {/* WhatsApp */}
+
+            {/* Enviar anamnese ao cliente — primeira ação visível */}
+            <Card variant="raised" className="!p-3 mt-1">
+              <p className="text-[10px] uppercase tracking-widest text-cyan-300 font-semibold mb-2">
+                Anamnese — enviar ao cliente
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSendLink}
+                  disabled={linkLoading}
+                  className="!py-2"
+                >
+                  {linkCopied ? '✓ Copiado' : linkLoading ? '...' : '📋 Copiar link'}
+                </Button>
+                {selectedStudent.phone ? (
+                  <Button
+                    size="sm"
+                    onClick={handleSendLinkWhatsApp}
+                    disabled={linkLoading}
+                    className="!py-2"
+                  >
+                    Enviar WhatsApp
+                  </Button>
+                ) : (
+                  <Button size="sm" disabled className="!py-2">
+                    Sem telefone
+                  </Button>
+                )}
+              </div>
+              {generatedLink && (
+                <div className="mt-2 p-2 rounded-lg bg-white/5 border border-white/10">
+                  <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                    Toque e segure para copiar:
+                  </p>
+                  <p className="text-xs text-cyan-300 break-all font-mono select-all">
+                    {generatedLink}
+                  </p>
+                </div>
+              )}
+            </Card>
+
+            {/* WhatsApp casual */}
             {selectedStudent.phone && (
               <a
                 href={whatsappUrl(

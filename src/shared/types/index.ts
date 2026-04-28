@@ -72,6 +72,10 @@ export interface Anamnesis {
   parqBloodPressureMed?: boolean
   parqOtherReason?: boolean
   parqObservations?: string
+  // Cliente respondeu (via link público)
+  clientData?: Record<string, unknown>
+  clientSubmittedAt?: string
+  clientLang?: string
   createdAt?: string
   updatedAt?: string
 }

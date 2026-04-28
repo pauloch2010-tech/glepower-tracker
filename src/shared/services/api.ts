@@ -172,6 +172,9 @@ function dbToAnamnesis(row: Record<string, unknown>): Anamnesis {
     parqBloodPressureMed: row.parq_blood_pressure_med as boolean,
     parqOtherReason: row.parq_other_reason as boolean,
     parqObservations: (row.parq_observations as string) ?? undefined,
+    clientData: (row.client_data as Record<string, unknown>) ?? undefined,
+    clientSubmittedAt: (row.client_submitted_at as string) ?? undefined,
+    clientLang: (row.client_lang as string) ?? undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   }

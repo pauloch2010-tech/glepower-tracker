@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from '@/shared/store/SessionContext'
+import { useLang } from '@/shared/i18n/LangContext'
 import { AppShell } from '@/shared/components/layout/AppShell'
 import { PageContainer } from '@/shared/components/layout/PageContainer'
 import { Card } from '@/shared/components/ui/Card'
 import { Button } from '@/shared/components/ui/Button'
 import { api } from '@/shared/services/api'
+import { whatsappUrl } from '@/shared/utils/phone'
 import type { Anamnesis } from '@/shared/types'
+
+const APP_URL = window.location.origin
 
 const CLINICAL_FIELDS: Array<{ key: keyof Anamnesis; label: string }> = [
   { key: 'familyDiseases', label: 'Doenças na família nos últimos anos?' },
@@ -33,15 +37,71 @@ const PARQ_FIELDS: Array<{ key: keyof Anamnesis; label: string }> = [
   { key: 'parqOtherReason', label: 'Sabe de outra razão pela qual não deve fazer atividade física?' },
 ]
 
+// ─── Client section field maps (mirrors AnamnesisClientPage keys) ─────────────
+type ClientSectionField = { key: string; type?: 'text' | 'yesno' | 'desc' }
+type ClientSection = {
+  id: 'personal' | 'routine' | 'physical' | 'nutrition' | 'emotional'
+  fields: ClientSectionField[]
+}
+
+const CLIENT_SECTIONS: ClientSection[] = [
+  {
+    id: 'personal',
+    fields: [
+      { key: 'name' }, { key: 'surname' }, { key: 'email' }, { key: 'whatsapp' },
+      { key: 'birthDate' }, { key: 'profession' }, { key: 'gender' }, { key: 'city' },
+      { key: 'height' }, { key: 'weight' }, { key: 'goal' }, { key: 'goalEvent' },
+    ],
+  },
+  {
+    id: 'routine',
+    fields: [
+      { key: 'trainingDays' }, { key: 'trainingTime' }, { key: 'bestTime' },
+      { key: 'selfCareTime' }, { key: 'weekendHabits' },
+    ],
+  },
+  {
+    id: 'physical',
+    fields: [
+      { key: 'practices' }, { key: 'frequency' }, { key: 'hadPersonal' },
+      { key: 'equipment' }, { key: 'limitation' }, { key: 'limitationDesc' },
+      { key: 'surgery' }, { key: 'surgeryDesc' }, { key: 'medicalRelease' },
+      { key: 'diseases' }, { key: 'diseasesDesc' }, { key: 'familyHistory' },
+      { key: 'familyHistoryDesc' }, { key: 'smoking' },
+    ],
+  },
+  {
+    id: 'nutrition',
+    fields: [
+      { key: 'meals' }, { key: 'skips' }, { key: 'dailyFood' }, { key: 'weekendFood' },
+      { key: 'hungerTime' }, { key: 'favorites' }, { key: 'avoided' },
+      { key: 'restriction' }, { key: 'restrictionDesc' }, { key: 'water' },
+      { key: 'medications' }, { key: 'contraceptive' }, { key: 'alcohol' },
+    ],
+  },
+  {
+    id: 'emotional',
+    fields: [
+      { key: 'weightFeeling' }, { key: 'anxiety' }, { key: 'anxietyTriggers' },
+      { key: 'emotionalEating' }, { key: 'bodyImage' }, { key: 'sleepQuality' },
+      { key: 'wakeUp' }, { key: 'support' }, { key: 'familySupport' },
+      { key: 'changeAbility' }, { key: 'pastAttempts' }, { key: 'dreamClothing' },
+    ],
+  },
+]
+
 export function AnamnesisFormPage() {
   const { state, navigate } = useSession()
+  const { t } = useLang()
   const student = state.student
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<Partial<Anamnesis>>({})
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -50,6 +110,8 @@ export function AnamnesisFormPage() {
       if (res.success && res.data) setForm(res.data)
       setLoading(false)
     })
+    // Limpa flag de pending review ao abrir
+    api.clearPendingReview(student.id).catch(() => {})
   }, [student])
 
   if (!student) return null
@@ -58,6 +120,8 @@ export function AnamnesisFormPage() {
     setForm((prev) => ({ ...prev, [key]: value }))
 
   const parqHasYes = PARQ_FIELDS.some((f) => form[f.key] === true)
+  const clientData = (form.clientData ?? {}) as Record<string, string>
+  const clientHasFilled = !!form.clientSubmittedAt
 
   const handleSave = async () => {
     setSaving(true)
@@ -69,6 +133,29 @@ export function AnamnesisFormPage() {
       return
     }
     navigate('student-detail')
+  }
+
+  const handleGenerateLink = async () => {
+    if (!student) return
+    const res = await api.ensureAnamnesisToken(student.id)
+    if (!res.success || !res.data) return
+    const url = `${APP_URL}/?token=${res.data}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2500)
+    } catch {
+      setGeneratedLink(url)
+    }
+  }
+
+  const handleSendWhatsApp = async () => {
+    if (!student?.phone) return
+    const res = await api.ensureAnamnesisToken(student.id)
+    if (!res.success || !res.data) return
+    const url = `${APP_URL}/?token=${res.data}`
+    const msg = `Olá ${student.name.split(' ')[0]}! Por favor preencha sua anamnese: ${url}`
+    window.open(whatsappUrl(student.phone, msg), '_blank')
   }
 
   const isEditing = !!form.id
@@ -87,7 +174,6 @@ export function AnamnesisFormPage() {
       const w = pdf.internal.pageSize.getWidth()
       const h = (canvas.height * w) / canvas.width
       if (h > pdf.internal.pageSize.getHeight()) {
-        // Multi-page
         let y = 0
         const pageH = pdf.internal.pageSize.getHeight()
         const sliceH = Math.floor((pageH / h) * canvas.height)
@@ -108,7 +194,6 @@ export function AnamnesisFormPage() {
       const filename = `anamnese-${student!.name.replace(/\s+/g, '-').toLowerCase()}.pdf`
       const blob = pdf.output('blob')
 
-      // Try Web Share API first (mobile)
       if (navigator.canShare?.({ files: [new File([blob], filename, { type: 'application/pdf' })] })) {
         const file = new File([blob], filename, { type: 'application/pdf' })
         await navigator.share({
@@ -130,7 +215,7 @@ export function AnamnesisFormPage() {
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button
-          onClick={() => (step === 1 ? navigate('student-detail') : setStep(1))}
+          onClick={() => (step === 1 ? navigate('student-detail') : setStep((step - 1) as 1 | 2 | 3))}
           className="p-1 -ml-1 text-text-muted hover:text-white"
           aria-label="Voltar"
         >
@@ -139,11 +224,9 @@ export function AnamnesisFormPage() {
           </svg>
         </button>
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-text-muted">
-            {student.name}
-          </p>
+          <p className="text-[10px] uppercase tracking-widest text-text-muted">{student.name}</p>
           <h1 className="font-display text-xl italic uppercase text-white">
-            Anamnese · {step}/2
+            Anamnese · {step}/3
           </h1>
         </div>
       </div>
@@ -166,18 +249,119 @@ export function AnamnesisFormPage() {
         {/* Progress bar */}
         <div className="flex gap-1">
           <div className="flex-1 h-1 rounded-full bg-cyan-400" />
-          <div
-            className={`flex-1 h-1 rounded-full transition-colors ${
-              step === 2 ? 'bg-cyan-400' : 'bg-white/10'
-            }`}
-          />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-cyan-400' : 'bg-white/10'}`} />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 3 ? 'bg-cyan-400' : 'bg-white/10'}`} />
         </div>
 
-        {step === 1 ? (
+        {/* ───────────── Step 1: Cliente ───────────── */}
+        {step === 1 && (
+          <>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg italic uppercase text-cyan-300">
+                Respostas do Cliente
+              </h2>
+              {clientHasFilled && (
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-semibold">
+                  Recebido
+                </span>
+              )}
+            </div>
+
+            {!clientHasFilled ? (
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-sm">Cliente ainda não preencheu</p>
+                    <p className="text-xs text-text-muted mt-1">
+                      Envie o link e ele(a) responde diretamente — perguntas sobre rotina,
+                      atividade física, alimentação e saúde emocional.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button size="sm" variant="secondary" onClick={handleGenerateLink}>
+                    {linkCopied ? '✓ Copiado' : '📋 Copiar link'}
+                  </Button>
+                  {student.phone && (
+                    <Button size="sm" onClick={handleSendWhatsApp}>
+                      WhatsApp
+                    </Button>
+                  )}
+                </div>
+
+                {generatedLink && (
+                  <div className="mt-3 p-2.5 rounded-lg bg-white/5 border border-white/10">
+                    <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                      Toque e segure para copiar:
+                    </p>
+                    <p className="text-xs text-cyan-300 break-all font-mono select-all">
+                      {generatedLink}
+                    </p>
+                  </div>
+                )}
+              </Card>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-xs text-text-muted -mt-2">
+                  <span>📅 {new Date(form.clientSubmittedAt!).toLocaleString('pt-BR')}</span>
+                  {form.clientLang && (
+                    <span className="px-1.5 py-0.5 rounded bg-white/10 uppercase font-mono text-[10px]">
+                      {form.clientLang}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {CLIENT_SECTIONS.map((section) => {
+                    const sectionData = section.fields
+                      .map((f) => ({ key: f.key, value: clientData[f.key] }))
+                      .filter((f) => f.value !== undefined && f.value !== '')
+                    if (sectionData.length === 0) return null
+
+                    const sectionTitle = t.anamnesisClient.steps[section.id]
+                    const sectionLabels = (t.anamnesisClient as unknown as Record<string, Record<string, string>>)[section.id] ?? {}
+
+                    return (
+                      <Card key={section.id}>
+                        <h3 className="font-semibold text-cyan-300 text-sm uppercase tracking-wider mb-3">
+                          {sectionTitle}
+                        </h3>
+                        <div className="flex flex-col gap-2.5">
+                          {sectionData.map(({ key, value }) => (
+                            <div key={key} className="border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                              <p className="text-[10px] uppercase tracking-wider text-text-muted mb-0.5">
+                                {sectionLabels[key] ?? key}
+                              </p>
+                              <p className="text-sm text-white whitespace-pre-wrap">{value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            <Button onClick={() => setStep(2)} className="w-full mt-2">
+              Continuar → Anamnese Clínica
+            </Button>
+          </>
+        )}
+
+        {/* ───────────── Step 2: Anamnese Clínica ───────────── */}
+        {step === 2 && (
           <>
             <h2 className="font-display text-lg italic uppercase text-cyan-300">
               Anamnese Clínica
             </h2>
+            <p className="text-xs text-text-muted -mt-2">Preenchido pela personal durante consulta</p>
             <div className="flex flex-col gap-3">
               {CLINICAL_FIELDS.map(({ key, label }) => (
                 <div key={key} className="flex flex-col gap-1.5">
@@ -193,11 +377,19 @@ export function AnamnesisFormPage() {
               ))}
             </div>
 
-            <Button onClick={() => setStep(2)} className="w-full mt-2">
-              Continuar → PAR-Q
-            </Button>
+            <div className="flex gap-3 mt-2">
+              <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">
+                Voltar
+              </Button>
+              <Button onClick={() => setStep(3)} className="flex-1">
+                Continuar → PAR-Q
+              </Button>
+            </div>
           </>
-        ) : (
+        )}
+
+        {/* ───────────── Step 3: PAR-Q ───────────── */}
+        {step === 3 && (
           <>
             <h2 className="font-display text-lg italic uppercase text-cyan-300">PAR-Q</h2>
             <p className="text-xs text-text-muted">
@@ -267,7 +459,7 @@ export function AnamnesisFormPage() {
             <div className="flex gap-3 pt-2">
               <Button
                 variant="secondary"
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="flex-1"
                 disabled={saving}
               >
@@ -297,12 +489,43 @@ export function AnamnesisFormPage() {
                     <span className="font-bold text-xl text-white">GP</span>
                   </div>
                   <div>
-                    <p className="font-bold text-lg">GlePower — Anamnese Clínica</p>
+                    <p className="font-bold text-lg">GlePower — Anamnese</p>
                     <p className="text-sm text-white/60">
                       {student!.name} · {new Date().toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>
+
+                {clientHasFilled && (
+                  <>
+                    <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
+                      Respostas do Cliente
+                    </h3>
+                    {CLIENT_SECTIONS.map((section) => {
+                      const sectionData = section.fields
+                        .map((f) => ({ key: f.key, value: clientData[f.key] }))
+                        .filter((f) => f.value !== undefined && f.value !== '')
+                      if (sectionData.length === 0) return null
+                      const sectionTitle = t.anamnesisClient.steps[section.id]
+                      const sectionLabels = (t.anamnesisClient as unknown as Record<string, Record<string, string>>)[section.id] ?? {}
+                      return (
+                        <div key={section.id} className="mb-6">
+                          <p className="text-white/80 font-semibold text-xs uppercase tracking-wider mb-2">
+                            {sectionTitle}
+                          </p>
+                          <div className="grid grid-cols-1 gap-2">
+                            {sectionData.map(({ key, value }) => (
+                              <div key={key} className="border-b border-white/5 pb-1.5">
+                                <p className="text-[10px] text-white/50">{sectionLabels[key] ?? key}</p>
+                                <p className="text-sm">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </>
+                )}
 
                 <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
                   Dados Clínicos
