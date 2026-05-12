@@ -159,7 +159,7 @@ export function WorkoutPlanFormPage() {
     <AppShell header={header}>
       <PageContainer className="py-4 gap-4" scrollable>
         {/* Nome e descrição */}
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div>
             <label className="text-xs text-text-muted uppercase tracking-wider">Nome do treino</label>
             <input

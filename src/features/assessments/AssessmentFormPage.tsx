@@ -426,7 +426,7 @@ export function AssessmentFormPage() {
               Perimetria (cm)
             </h2>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <PerimField label="Ombro" value={form.circShoulder} onChange={setNum('circShoulder')} point="shoulder" setActive={setActivePoint} />
               <PerimField label="Tórax" value={form.circChest} onChange={setNum('circChest')} point="circ_chest" setActive={setActivePoint} />
               <PerimField label="Cintura" value={form.circWaist} onChange={setNum('circWaist')} point="waist" setActive={setActivePoint} />
@@ -495,7 +495,7 @@ export function AssessmentFormPage() {
 
             {computed ? (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <ResultCard label="IMC" value={computed.bmi.toFixed(1)} badge={computed.bmiClass} color="cyan" />
                   <ResultCard label="% Gordura" value={computed.bodyFatPct.toFixed(1) + '%'} badge={computed.bodyFatClass} color="violet" />
                   <ResultCard label="Massa Gorda" value={computed.fatMassKg.toFixed(1) + ' kg'} color="rose" />

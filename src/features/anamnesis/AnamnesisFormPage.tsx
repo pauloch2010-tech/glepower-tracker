@@ -332,7 +332,7 @@ export function AnamnesisFormPage() {
                         <h3 className="font-semibold text-cyan-300 text-sm uppercase tracking-wider mb-3">
                           {sectionTitle}
                         </h3>
-                        <div className="flex flex-col gap-2.5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
                           {sectionData.map(({ key, value }) => (
                             <div key={key} className="border-b border-white/5 pb-2 last:border-0 last:pb-0">
                               <p className="text-[10px] uppercase tracking-wider text-text-muted mb-0.5">
@@ -362,7 +362,7 @@ export function AnamnesisFormPage() {
               Anamnese Clínica
             </h2>
             <p className="text-xs text-text-muted -mt-2">Preenchido pela personal durante consulta</p>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
               {CLINICAL_FIELDS.map(({ key, label }) => (
                 <div key={key} className="flex flex-col gap-1.5">
                   <label className="text-xs text-text-muted">{label}</label>
@@ -396,7 +396,7 @@ export function AnamnesisFormPage() {
               Questionário de Prontidão para Atividade Física
             </p>
 
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
               {PARQ_FIELDS.map(({ key, label }) => {
                 const value = form[key] === true
                 return (

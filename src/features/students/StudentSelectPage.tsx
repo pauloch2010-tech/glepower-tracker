@@ -216,9 +216,9 @@ export function StudentSelectPage() {
             <Spinner size="lg" />
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center gap-4 py-12 text-center">
+              <div className="col-span-full flex flex-col items-center gap-4 py-12 text-center">
                 <p className="text-text-muted">Nenhum aluno encontrado.</p>
                 <Button size="sm" onClick={handleNewStudent}>
                   Cadastrar primeiro aluno

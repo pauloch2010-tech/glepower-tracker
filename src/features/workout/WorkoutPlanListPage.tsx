@@ -162,7 +162,7 @@ export function WorkoutPlanListPage() {
                 <p className="text-text-muted text-xs mt-1">Crie o primeiro plano de treino</p>
               </Card>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {activePlans.map((plan) => {
                   const totalExercises = plan.exercises.length
                   const totalSets = plan.exercises.reduce((a, e) => a + e.targetSets, 0)
@@ -243,7 +243,7 @@ export function WorkoutPlanListPage() {
                 <p className="text-text-muted text-sm">Nenhum treino executado ainda</p>
               </Card>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {executions.map((exec, idx) => {
                   const totalSets = exec.exercises.reduce((a, e) => a + e.sets.length, 0)
                   const completedSets = exec.exercises.reduce(

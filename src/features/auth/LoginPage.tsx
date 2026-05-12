@@ -107,42 +107,44 @@ export function LoginPage() {
 
   return (
     <PageContainer centered className="min-h-dvh bg-gradient-brand px-6 py-12">
-      <div className="text-center mb-2">
-        <h1 className="font-display text-6xl text-white uppercase italic tracking-wider">
-          Gle<span className="text-primary">Power</span>
-        </h1>
-        <p className="text-text-secondary text-sm mt-2 tracking-widest uppercase">
-          Tracker
+      <div className="w-full max-w-sm mx-auto">
+        <div className="text-center mb-2">
+          <h1 className="font-display text-6xl text-white uppercase italic tracking-wider">
+            Gle<span className="text-primary">Power</span>
+          </h1>
+          <p className="text-text-secondary text-sm mt-2 tracking-widest uppercase">
+            Tracker
+          </p>
+        </div>
+
+        <p className="text-center text-text-secondary text-sm mb-2">
+          Digite seu PIN de acesso
+        </p>
+
+        <form onSubmit={handleSubmit} noValidate>
+          <PinDisplay value={pin} error={error} />
+
+          <PinPad onKey={handleKeyUpdate} />
+
+          {pin.length === PIN_LENGTH && (
+            <div className="mt-6">
+              <Button
+                type="submit"
+                size="full"
+                loading={loading}
+                disabled={loading}
+                className="animate-scale-in"
+              >
+                Entrar
+              </Button>
+            </div>
+          )}
+        </form>
+
+        <p className="text-center text-text-muted text-xs mt-8">
+          GlePower Tracker v0.1
         </p>
       </div>
-
-      <p className="text-center text-text-secondary text-sm mb-2">
-        Digite seu PIN de acesso
-      </p>
-
-      <form onSubmit={handleSubmit} noValidate>
-        <PinDisplay value={pin} error={error} />
-
-        <PinPad onKey={handleKeyUpdate} />
-
-        {pin.length === PIN_LENGTH && (
-          <div className="mt-6">
-            <Button
-              type="submit"
-              size="full"
-              loading={loading}
-              disabled={loading}
-              className="animate-scale-in"
-            >
-              Entrar
-            </Button>
-          </div>
-        )}
-      </form>
-
-      <p className="text-center text-text-muted text-xs mt-8">
-        GlePower Tracker v0.1
-      </p>
     </PageContainer>
   )
 }

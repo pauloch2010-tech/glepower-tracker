@@ -528,7 +528,7 @@ export function AnamnesisClientPage({ token }: { token: string }) {
   const isLastStep = currentStep === STEPS.length - 1
 
   return (
-    <div className="min-h-screen bg-bg pb-12">
+    <div className="min-h-screen bg-bg pb-12 max-w-2xl mx-auto">
       {/* Header sticky */}
       <div className="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-white/8 px-4 py-3">
         <div className="flex items-center justify-between mb-2">

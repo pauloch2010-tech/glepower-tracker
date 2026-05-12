@@ -50,7 +50,6 @@ export function StudentDetailPage() {
 
   const hasAnamnesis = !!anamnesis
   const latestAssessment = assessments[0]
-  const canCreateAssessment = hasAnamnesis // regra: anamnese obrigatória antes da 1ª avaliação
 
   const activePlans = plans.filter((p) => p.active)
   const completedExecs = executions.filter((e) => e.status === 'completed')
@@ -143,7 +142,7 @@ export function StudentDetailPage() {
         </Card>
 
         {/* 4 módulos */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {/* Anamnese */}
           <button
             onClick={handleOpenAnamnesis}
@@ -175,8 +174,7 @@ export function StudentDetailPage() {
           {/* Avaliações */}
           <button
             onClick={() => navigate('assessment-list')}
-            disabled={!canCreateAssessment && assessments.length === 0}
-            className="relative flex flex-col items-start gap-2 p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-cyan-500/[0.02] hover:border-cyan-500/40 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative flex flex-col items-start gap-2 p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-cyan-500/[0.02] hover:border-cyan-500/40 transition-all text-left"
           >
             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
               <svg className="w-5 h-5 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,20 +223,6 @@ export function StudentDetailPage() {
             </p>
           </button>
         </div>
-
-        {/* Alerta anamnese obrigatória */}
-        {!loading && !hasAnamnesis && (
-          <Card className="border-amber-500/30 bg-amber-500/10">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div className="text-xs text-amber-200">
-                <strong>Anamnese obrigatória</strong> antes da 1ª avaliação física. Preencha para liberar.
-              </div>
-            </div>
-          </Card>
-        )}
 
         {/* Alerta de revisão pendente */}
         {!loading && pendingReview && (
@@ -323,11 +307,11 @@ export function StudentDetailPage() {
             variant="secondary"
             onClick={() => {
               setEditingAssessment(null)
-              navigate(canCreateAssessment ? 'assessment-form' : 'anamnesis')
+              navigate('assessment-form')
             }}
             className="w-full"
           >
-            {hasAnamnesis ? '+ Nova avaliação física' : '+ Preencher anamnese'}
+            + Nova avaliação física
           </Button>
         </div>
       </PageContainer>

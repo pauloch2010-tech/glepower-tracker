@@ -76,6 +76,7 @@ export function AssessmentListPage() {
           </Card>
         ) : (
           <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {assessments.map((a, idx) => {
               const total = assessments.length
               const number = total - idx
@@ -129,6 +130,7 @@ export function AssessmentListPage() {
                 </Card>
               )
             })}
+            </div>
 
             <Button onClick={handleNew} className="mt-2 mb-8">
               + Nova avaliação

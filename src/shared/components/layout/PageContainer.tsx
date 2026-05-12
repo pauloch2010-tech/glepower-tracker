@@ -27,7 +27,7 @@ export function PageContainer({
     <div
       className={cn(
         'flex flex-col w-full flex-1',
-        !noPadding && 'px-4',
+        !noPadding && 'px-4 md:px-6 lg:px-8',
         centered && 'justify-center items-center',
         scrollable && 'overflow-y-auto',
         className,

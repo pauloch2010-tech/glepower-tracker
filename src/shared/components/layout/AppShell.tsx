@@ -24,7 +24,7 @@ export function AppShell({ children, header, footer, gradient = false }: AppShel
   return (
     <div
       className={cn(
-        'flex flex-col min-h-dvh w-full max-w-md mx-auto',
+        'flex flex-col min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto',
         'relative overflow-hidden',
         gradient ? 'bg-gradient-brand' : 'bg-bg',
       )}
@@ -37,7 +37,7 @@ export function AppShell({ children, header, footer, gradient = false }: AppShel
 
       {/* Optional header */}
       {header && (
-        <header className="flex-none px-4 py-3">{header}</header>
+        <header className="flex-none px-4 md:px-6 lg:px-8 py-3 md:py-4">{header}</header>
       )}
 
       {/* Main scrollable content */}
@@ -47,7 +47,7 @@ export function AppShell({ children, header, footer, gradient = false }: AppShel
 
       {/* Optional footer */}
       {footer && (
-        <footer className="flex-none px-4 py-3 pb-safe">{footer}</footer>
+        <footer className="flex-none px-4 md:px-6 lg:px-8 py-3 md:py-4 pb-safe">{footer}</footer>
       )}
 
       {/* Safe area bottom fallback */}
