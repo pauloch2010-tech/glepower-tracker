@@ -23,6 +23,7 @@ import { supabase } from '@/shared/services/supabase'
 const STEP_TO_PATH: Partial<Record<AppStep, string>> = {
   login:              '/',
   register:           '/register',
+  'reset-password':   '/reset-password',
   'student-select':   '/students',
   'student-form':     '/student/form',
   'student-detail':   '/student',
@@ -151,6 +152,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Ref to track current step without triggering popstate effect
   const stepRef = useRef(state.step)
   stepRef.current = state.step
+
+  // Listen for Supabase auth events (PASSWORD_RECOVERY, SIGNED_OUT, etc.)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked the reset-password link in their email
+        dispatch({ type: 'NAVIGATE', payload: 'reset-password' })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Restore session on mount via Supabase auth state
   useEffect(() => {

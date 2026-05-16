@@ -783,6 +783,21 @@ export const api = {
     return supabase.auth.signOut()
   },
 
+  async forgotPassword(email: string): Promise<ApiResponse<void>> {
+    if (!USE_SUPABASE) return { success: true } // mock: pretend it worked
+    const redirectTo = `${window.location.origin}/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  },
+
+  async resetPassword(newPassword: string): Promise<ApiResponse<void>> {
+    if (!USE_SUPABASE) return { success: false, error: 'Supabase não configurado' }
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  },
+
   getStudents(): Promise<ApiResponse<Student[]>> {
     if (USE_SUPABASE) return supabaseGetStudents()
     if (SCRIPT_URL) return gasCall<Student[]>('get_students')

@@ -18,6 +18,7 @@ export type AppStep =
   | 'review'
   | 'success'
   | 'progress'
+  | 'reset-password'
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export interface AuthSession {

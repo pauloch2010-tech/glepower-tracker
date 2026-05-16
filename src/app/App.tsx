@@ -7,6 +7,7 @@ import { Spinner } from '@/shared/components/ui/Spinner'
 // ─── Eager imports (critical path — login, navigation, core pages) ────────────
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
+import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
 import { StudentSelectPage } from '@/features/students/StudentSelectPage'
 import { StudentFormPage } from '@/features/students/StudentFormPage'
 import { StudentDetailPage } from '@/features/students/StudentDetailPage'
@@ -80,6 +81,9 @@ export function App() {
 
       case 'register':
         return <RegisterPage />
+
+      case 'reset-password':
+        return <ResetPasswordPage />
 
       case 'student-select':
         return <StudentSelectPage />
