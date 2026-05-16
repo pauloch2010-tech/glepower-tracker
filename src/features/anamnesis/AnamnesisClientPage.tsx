@@ -35,7 +35,7 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-cyan-500/50 focus:bg-white/[0.08] transition-all"
+      className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:bg-white/[0.08] transition-all"
     />
   )
 }
@@ -57,7 +57,7 @@ function TextareaInput({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-cyan-500/50 focus:bg-white/[0.08] transition-all resize-none"
+      className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:bg-white/[0.08] transition-all resize-none"
     />
   )
 }
@@ -77,7 +77,7 @@ function SelectInput({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
+      className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary/50 transition-all appearance-none"
     >
       {placeholder && <option value="">{placeholder}</option>}
       {options.map((o) => (
@@ -107,7 +107,7 @@ function RadioGroup({
           onClick={() => onChange(o)}
           className={`px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
             value === o
-              ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200'
+              ? 'bg-primary/20 border-primary/40 text-pink-200'
               : 'bg-white/[0.04] border-white/10 text-text-muted'
           }`}
         >
@@ -152,7 +152,7 @@ function LangSelector({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
           onClick={() => setLang(code)}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
             lang === code
-              ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200'
+              ? 'bg-primary/20 border-primary/40 text-pink-200'
               : 'bg-white/[0.04] border-white/10 text-text-muted'
           }`}
         >
@@ -480,7 +480,7 @@ export function AnamnesisClientPage({ token }: { token: string }) {
   if (tokenStatus === 'loading') {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -552,7 +552,7 @@ export function AnamnesisClientPage({ token }: { token: string }) {
             <div
               key={i}
               className={`flex-1 h-0.5 rounded-full transition-all duration-300 ${
-                i <= currentStep ? 'bg-cyan-400' : 'bg-white/10'
+                i <= currentStep ? 'bg-primary' : 'bg-white/10'
               }`}
             />
           ))}

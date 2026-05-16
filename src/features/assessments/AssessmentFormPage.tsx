@@ -233,7 +233,7 @@ export function AssessmentFormPage() {
             <div
               key={s}
               className={`flex-1 h-1 rounded-full transition-colors ${
-                s <= step ? 'bg-cyan-400' : 'bg-white/10'
+                s <= step ? 'bg-primary' : 'bg-white/10'
               }`}
             />
           ))}
@@ -242,7 +242,7 @@ export function AssessmentFormPage() {
         {/* STEP 1 — Antropometria */}
         {step === 1 && (
           <>
-            <h2 className="font-display text-lg italic uppercase text-cyan-300">
+            <h2 className="font-display text-lg italic uppercase text-pink-300">
               Antropometria
             </h2>
 
@@ -282,17 +282,17 @@ export function AssessmentFormPage() {
             </div>
 
             {computed && (
-              <Card className="border-cyan-500/20 bg-cyan-500/[0.04]">
+              <Card className="border-primary/20 bg-primary/[0.04]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-cyan-300">
+                    <p className="text-[10px] uppercase tracking-wider text-pink-300">
                       IMC
                     </p>
                     <p className="font-mono text-2xl font-bold text-white mt-0.5">
                       {computed.bmi.toFixed(1)}
                     </p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-lg bg-cyan-500/20 text-cyan-200">
+                  <span className="text-xs px-2 py-1 rounded-lg bg-primary/20 text-pink-200">
                     {computed.bmiClass}
                   </span>
                 </div>
@@ -337,7 +337,7 @@ export function AssessmentFormPage() {
         {/* STEP 2 — Dobras */}
         {step === 2 && (
           <>
-            <h2 className="font-display text-lg italic uppercase text-cyan-300">
+            <h2 className="font-display text-lg italic uppercase text-pink-300">
               Dobras cutâneas (mm)
             </h2>
             <p className="text-[10px] text-text-muted -mt-2">
@@ -355,7 +355,7 @@ export function AssessmentFormPage() {
                     <div key={key} className="flex flex-col gap-1">
                       <label
                         className={`text-[10px] uppercase tracking-wider ${
-                          active ? 'text-cyan-300' : 'text-text-muted/50'
+                          active ? 'text-pink-300' : 'text-text-muted/50'
                         }`}
                       >
                         {meta.label} {active && '★'}
@@ -386,10 +386,10 @@ export function AssessmentFormPage() {
             </div>
 
             {computed && computed.sumSkinfolds > 0 && (
-              <Card className="border-cyan-500/20 bg-cyan-500/[0.04]">
+              <Card className="border-primary/20 bg-primary/[0.04]">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-cyan-300">
+                    <p className="text-[10px] uppercase tracking-wider text-pink-300">
                       Soma das dobras
                     </p>
                     <p className="font-mono text-xl font-bold text-white mt-0.5">
@@ -397,7 +397,7 @@ export function AssessmentFormPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-cyan-300">
+                    <p className="text-[10px] uppercase tracking-wider text-pink-300">
                       % Gordura (prévia)
                     </p>
                     <p className="font-mono text-xl font-bold text-white mt-0.5">
@@ -422,7 +422,7 @@ export function AssessmentFormPage() {
         {/* STEP 3 — Perimetria + Diâmetros */}
         {step === 3 && (
           <>
-            <h2 className="font-display text-lg italic uppercase text-cyan-300">
+            <h2 className="font-display text-lg italic uppercase text-pink-300">
               Perimetria (cm)
             </h2>
 
@@ -489,18 +489,18 @@ export function AssessmentFormPage() {
         {/* STEP 4 — Resumo */}
         {step === 4 && (
           <>
-            <h2 className="font-display text-lg italic uppercase text-cyan-300">
+            <h2 className="font-display text-lg italic uppercase text-pink-300">
               Resumo da avaliação
             </h2>
 
             {computed ? (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <ResultCard label="IMC" value={computed.bmi.toFixed(1)} badge={computed.bmiClass} color="cyan" />
+                  <ResultCard label="IMC" value={computed.bmi.toFixed(1)} badge={computed.bmiClass} color="primary" />
                   <ResultCard label="% Gordura" value={computed.bodyFatPct.toFixed(1) + '%'} badge={computed.bodyFatClass} color="violet" />
                   <ResultCard label="Massa Gorda" value={computed.fatMassKg.toFixed(1) + ' kg'} color="rose" />
                   <ResultCard label="Massa Magra" value={computed.leanMassKg.toFixed(1) + ' kg'} color="emerald" />
-                  <ResultCard label="Massa Muscular" value={computed.muscleMassKg.toFixed(1) + ' kg'} color="cyan" />
+                  <ResultCard label="Massa Muscular" value={computed.muscleMassKg.toFixed(1) + ' kg'} color="primary" />
                   <ResultCard label="Massa Óssea" value={computed.boneMassKg.toFixed(1) + ' kg'} color="amber" />
                   <ResultCard label="TMB" value={Math.round(computed.bmr) + ' kcal'} color="violet" />
                   <ResultCard label="GET" value={Math.round(computed.tdee) + ' kcal'} color="rose" />
@@ -642,10 +642,10 @@ function ResultCard({
   label: string
   value: string
   badge?: string
-  color: 'cyan' | 'violet' | 'rose' | 'emerald' | 'amber'
+  color: 'primary' | 'violet' | 'rose' | 'emerald' | 'amber'
 }) {
   const colors = {
-    cyan: 'border-cyan-500/20 bg-cyan-500/[0.04] text-cyan-300',
+    primary: 'border-primary/20 bg-primary/[0.04] text-pink-300',
     violet: 'border-violet-500/20 bg-violet-500/[0.04] text-violet-300',
     rose: 'border-rose-500/20 bg-rose-500/[0.04] text-rose-300',
     emerald: 'border-emerald-500/20 bg-emerald-500/[0.04] text-emerald-300',

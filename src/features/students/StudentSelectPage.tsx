@@ -265,7 +265,7 @@ export function StudentSelectPage() {
 
             {/* Enviar anamnese ao cliente — primeira ação visível */}
             <Card variant="raised" className="!p-3 mt-1">
-              <p className="text-[10px] uppercase tracking-widest text-cyan-300 font-semibold mb-2">
+              <p className="text-[10px] uppercase tracking-widest text-pink-300 font-semibold mb-2">
                 Anamnese — enviar ao cliente
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -298,7 +298,7 @@ export function StudentSelectPage() {
                   <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
                     Toque e segure para copiar:
                   </p>
-                  <p className="text-xs text-cyan-300 break-all font-mono select-all">
+                  <p className="text-xs text-pink-300 break-all font-mono select-all">
                     {generatedLink}
                   </p>
                 </div>

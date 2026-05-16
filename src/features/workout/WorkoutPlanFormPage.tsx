@@ -182,7 +182,7 @@ export function WorkoutPlanFormPage() {
 
         {/* Lista de exercícios */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-display text-sm italic uppercase text-cyan-300">Exercícios</h3>
+          <h3 className="font-display text-sm italic uppercase text-pink-300">Exercícios</h3>
 
           {exercises.map((ex, idx) => (
             <Card key={ex.id} className="relative">
@@ -263,7 +263,7 @@ export function WorkoutPlanFormPage() {
                           onClick={() => setSelSub(s === selSub ? null : s)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                             selSub === s
-                              ? 'bg-cyan-500/30 text-cyan-200'
+                              ? 'bg-primary/30 text-pink-200'
                               : 'bg-white/[0.06] text-white/50 hover:bg-white/[0.1]'
                           }`}
                         >

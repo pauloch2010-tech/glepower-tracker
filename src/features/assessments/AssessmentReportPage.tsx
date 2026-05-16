@@ -265,7 +265,7 @@ export function AssessmentReportPage() {
 
           {/* Cabeçalho do relatório */}
           <div className="flex items-center gap-3 pb-3 border-b border-white/10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center flex-shrink-0">
               <span className="font-display text-lg italic font-black text-white">GP</span>
             </div>
             <div className="flex-1">
@@ -280,8 +280,8 @@ export function AssessmentReportPage() {
 
           {/* Métricas principais */}
           {comp && (
-            <Card className="border-cyan-500/20">
-              <p className="text-[10px] uppercase tracking-wider text-cyan-300 mb-3">Composição Corporal</p>
+            <Card className="border-primary/20">
+              <p className="text-[10px] uppercase tracking-wider text-pink-300 mb-3">Composição Corporal</p>
               <div className="grid grid-cols-2 gap-3">
                 <MetricCard label="Peso" value={assessment.weightKg?.toFixed(1)} unit="kg" />
                 <MetricCard

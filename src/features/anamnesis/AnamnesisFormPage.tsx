@@ -248,16 +248,16 @@ export function AnamnesisFormPage() {
       <PageContainer className="py-4 gap-4" scrollable>
         {/* Progress bar */}
         <div className="flex gap-1">
-          <div className="flex-1 h-1 rounded-full bg-cyan-400" />
-          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-cyan-400' : 'bg-white/10'}`} />
-          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 3 ? 'bg-cyan-400' : 'bg-white/10'}`} />
+          <div className="flex-1 h-1 rounded-full bg-primary" />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-white/10'}`} />
+          <div className={`flex-1 h-1 rounded-full transition-colors ${step >= 3 ? 'bg-primary' : 'bg-white/10'}`} />
         </div>
 
         {/* ───────────── Step 1: Cliente ───────────── */}
         {step === 1 && (
           <>
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg italic uppercase text-cyan-300">
+              <h2 className="font-display text-lg italic uppercase text-pink-300">
                 Respostas do Cliente
               </h2>
               {clientHasFilled && (
@@ -300,7 +300,7 @@ export function AnamnesisFormPage() {
                     <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
                       Toque e segure para copiar:
                     </p>
-                    <p className="text-xs text-cyan-300 break-all font-mono select-all">
+                    <p className="text-xs text-pink-300 break-all font-mono select-all">
                       {generatedLink}
                     </p>
                   </div>
@@ -329,7 +329,7 @@ export function AnamnesisFormPage() {
 
                     return (
                       <Card key={section.id}>
-                        <h3 className="font-semibold text-cyan-300 text-sm uppercase tracking-wider mb-3">
+                        <h3 className="font-semibold text-pink-300 text-sm uppercase tracking-wider mb-3">
                           {sectionTitle}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2.5">
@@ -358,7 +358,7 @@ export function AnamnesisFormPage() {
         {/* ───────────── Step 2: Anamnese Clínica ───────────── */}
         {step === 2 && (
           <>
-            <h2 className="font-display text-lg italic uppercase text-cyan-300">
+            <h2 className="font-display text-lg italic uppercase text-pink-300">
               Anamnese Clínica
             </h2>
             <p className="text-xs text-text-muted -mt-2">Preenchido pela personal durante consulta</p>
@@ -391,7 +391,7 @@ export function AnamnesisFormPage() {
         {/* ───────────── Step 3: PAR-Q ───────────── */}
         {step === 3 && (
           <>
-            <h2 className="font-display text-lg italic uppercase text-cyan-300">PAR-Q</h2>
+            <h2 className="font-display text-lg italic uppercase text-pink-300">PAR-Q</h2>
             <p className="text-xs text-text-muted">
               Questionário de Prontidão para Atividade Física
             </p>
@@ -485,7 +485,7 @@ export function AnamnesisFormPage() {
             <div className="fixed -left-[9999px] top-0">
               <div ref={printRef} className="w-[800px] bg-[#0a0a0a] p-8 text-white">
                 <div className="flex items-center gap-4 pb-4 border-b border-white/10 mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-cyan-400 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary-light flex items-center justify-center">
                     <span className="font-bold text-xl text-white">GP</span>
                   </div>
                   <div>
@@ -498,7 +498,7 @@ export function AnamnesisFormPage() {
 
                 {clientHasFilled && (
                   <>
-                    <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
+                    <h3 className="text-pink-300 font-bold text-sm uppercase tracking-wider mb-4">
                       Respostas do Cliente
                     </h3>
                     {CLIENT_SECTIONS.map((section) => {
@@ -527,7 +527,7 @@ export function AnamnesisFormPage() {
                   </>
                 )}
 
-                <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
+                <h3 className="text-pink-300 font-bold text-sm uppercase tracking-wider mb-4">
                   Dados Clínicos
                 </h3>
                 <div className="grid grid-cols-1 gap-3 mb-8">
@@ -539,7 +539,7 @@ export function AnamnesisFormPage() {
                   ))}
                 </div>
 
-                <h3 className="text-cyan-300 font-bold text-sm uppercase tracking-wider mb-4">
+                <h3 className="text-pink-300 font-bold text-sm uppercase tracking-wider mb-4">
                   PAR-Q — Questionário de Prontidão
                 </h3>
                 <div className="grid grid-cols-1 gap-3 mb-6">

@@ -158,7 +158,7 @@ export function StudentFormPage({ editStudent, onBack, onSaved }: Props) {
                     onClick={() => setForm((prev) => ({ ...prev, sex: s }))}
                     className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                       form.sex === s
-                        ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200'
+                        ? 'bg-primary/20 border-primary/40 text-pink-200'
                         : 'bg-white/[0.04] border-white/10 text-text-muted'
                     }`}
                   >

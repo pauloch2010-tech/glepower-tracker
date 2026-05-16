@@ -5,28 +5,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#000000',
+        bg: '#0B0B0D',
         primary: {
-          DEFAULT: '#E91E63',
-          dark: '#C2185B',
-          light: '#F06292',
+          DEFAULT: '#FF4E8B',
+          dark: '#C33764',
+          light: '#FF7BAC',
         },
         secondary: {
-          DEFAULT: '#311848',
-          light: '#4A2470',
+          DEFAULT: '#6A0DAD',
+          light: '#8A2DC0',
         },
         accent: {
-          DEFAULT: '#A57DDB',
-          light: '#C4A8E8',
+          DEFAULT: '#D4A5A5',
+          light: '#E8C4C4',
         },
         surface: {
-          DEFAULT: '#1A1A1A',
-          raised: '#242424',
-          overlay: '#2E2E2E',
+          DEFAULT: '#1C1C1E',
+          raised: '#2C2C2E',
+          overlay: '#3A3A3C',
         },
         text: {
           primary: '#FFFFFF',
-          secondary: '#B0B0B0',
+          secondary: '#F5F5F7',
           muted: '#6B6B6B',
         },
         success: '#4CAF50',
@@ -40,8 +40,8 @@ export default {
         mono: ['"JetBrains Mono"', '"Space Mono"', 'monospace'],
       },
       backgroundImage: {
-        'gradient-brand': 'linear-gradient(135deg, #311848 0%, #E91E63 100%)',
-        'gradient-card': 'linear-gradient(145deg, #1A1A1A 0%, #242424 100%)',
+        'gradient-brand': 'linear-gradient(135deg, #4A0D67 0%, #6A0DAD 35%, #C33764 70%, #FF4E8B 100%)',
+        'gradient-card': 'linear-gradient(145deg, #1C1C1E 0%, #2C2C2E 100%)',
       },
       borderRadius: {
         card: '16px',
@@ -51,8 +51,8 @@ export default {
       },
       boxShadow: {
         card: '0 4px 20px rgba(0, 0, 0, 0.4)',
-        glow: '0 0 20px rgba(233, 30, 99, 0.3)',
-        'glow-accent': '0 0 20px rgba(165, 125, 219, 0.3)',
+        glow: '0 0 20px rgba(255, 78, 139, 0.35)',
+        'glow-accent': '0 0 20px rgba(212, 165, 165, 0.3)',
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
@@ -79,8 +79,8 @@ export default {
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(233, 30, 99, 0.3)' },
-          '50%': { boxShadow: '0 0 40px rgba(233, 30, 99, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(255, 78, 139, 0.35)' },
+          '50%': { boxShadow: '0 0 40px rgba(255, 78, 139, 0.65)' },
         },
       },
       spacing: {

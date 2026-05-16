@@ -64,8 +64,8 @@ export function AssessmentListPage() {
           <p className="text-text-muted text-center py-12">Carregando...</p>
         ) : assessments.length === 0 ? (
           <Card className="py-12 flex flex-col items-center gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 flex items-center justify-center">
-              <svg className="w-8 h-8 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <svg className="w-8 h-8 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
             </div>
@@ -83,8 +83,8 @@ export function AssessmentListPage() {
               return (
                 <Card key={a.id} className="flex flex-col gap-3">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="font-display text-lg italic font-black text-cyan-300">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
+                      <span className="font-display text-lg italic font-black text-pink-300">
                         #{number}
                       </span>
                     </div>
@@ -116,7 +116,7 @@ export function AssessmentListPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleViewReport(a.id!)}
-                      className="flex-1 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-medium hover:bg-cyan-500/20 transition-all"
+                      className="flex-1 py-2 rounded-xl bg-primary/10 border border-primary/20 text-pink-300 text-xs font-medium hover:bg-primary/20 transition-all"
                     >
                       Ver Relatório
                     </button>

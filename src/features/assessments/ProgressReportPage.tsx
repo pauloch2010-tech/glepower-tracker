@@ -217,7 +217,7 @@ export function ProgressReportPage() {
                 onClick={() => setSelected(m)}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${
                   selected.key === m.key
-                    ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200'
+                    ? 'bg-primary/20 border-primary/40 text-pink-200'
                     : 'bg-white/[0.04] border-white/10 text-text-muted'
                 }`}
               >

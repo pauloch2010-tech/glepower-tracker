@@ -174,10 +174,10 @@ export function StudentDetailPage() {
           {/* Avaliações */}
           <button
             onClick={() => navigate('assessment-list')}
-            className="relative flex flex-col items-start gap-2 p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-cyan-500/[0.02] hover:border-cyan-500/40 transition-all text-left"
+            className="relative flex flex-col items-start gap-2 p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-primary/10 to-primary/[0.02] hover:border-primary/40 transition-all text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-pink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
             </div>
@@ -266,7 +266,7 @@ export function StudentDetailPage() {
             <div className="mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">
               <p className="text-[10px] text-text-muted mb-1.5 uppercase tracking-wider">Copie o link abaixo:</p>
               <p
-                className="text-[11px] text-cyan-300 break-all font-mono leading-relaxed cursor-pointer select-all"
+                className="text-[11px] text-pink-300 break-all font-mono leading-relaxed cursor-pointer select-all"
                 onClick={() => {
                   const el = document.createElement('textarea')
                   el.value = generatedLink
@@ -287,8 +287,8 @@ export function StudentDetailPage() {
 
         {/* Resumo última avaliação */}
         {latestAssessment && (
-          <Card className="border-cyan-500/20 bg-cyan-500/[0.03]">
-            <p className="text-xs uppercase tracking-widest text-cyan-300 mb-2">
+          <Card className="border-primary/20 bg-primary/[0.03]">
+            <p className="text-xs uppercase tracking-widest text-pink-300 mb-2">
               Última avaliação
             </p>
             <div className="grid grid-cols-3 gap-3">

@@ -182,7 +182,7 @@ export function WorkoutExecutionPage() {
         {/* Barra de progresso */}
         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-primary to-cyan-400 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-primary to-primary-light transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -304,7 +304,7 @@ function ExerciseExecCard({
 
       {/* Meta do treino */}
       <div className="flex gap-3 mb-3 text-xs">
-        <span className="px-2 py-1 rounded-md bg-cyan-500/10 text-cyan-300">
+        <span className="px-2 py-1 rounded-md bg-primary/10 text-pink-300">
           {exercise.targetReps} reps
         </span>
         {exercise.targetWeight && (
