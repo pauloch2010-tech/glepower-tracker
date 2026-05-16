@@ -15,6 +15,7 @@ import type {
   SessionState,
 } from '@/shared/types'
 import { sessionStorage_ } from '@/shared/services/storage'
+import { supabase } from '@/shared/services/supabase'
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 const INITIAL_STATE: SessionState = {
@@ -117,12 +118,37 @@ export function useSession() {
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
 
-  // Restore session on mount
+  // Restore session on mount via Supabase auth state
   useEffect(() => {
-    const saved = sessionStorage_.load()
-    if (saved?.auth && saved.step !== 'login') {
-      dispatch({ type: 'RESTORE', payload: saved })
-    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Try to restore from sessionStorage first (has student context etc.)
+        const saved = sessionStorage_.load()
+        if (saved?.auth && saved.step !== 'login') {
+          dispatch({ type: 'RESTORE', payload: saved })
+          return
+        }
+        // Otherwise do a minimal login restoration from Supabase
+        supabase
+          .from('trainers')
+          .select('id, name')
+          .eq('auth_user_id', session.user.id)
+          .single()
+          .then(({ data: trainer }) => {
+            if (trainer) {
+              dispatch({
+                type: 'LOGIN',
+                payload: {
+                  trainerId: trainer.id as string,
+                  trainerName: trainer.name as string,
+                  token: session.access_token,
+                  expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+                },
+              })
+            }
+          })
+      }
+    })
   }, [])
 
   // Persist on every state change (except logout — reducer handles clear)
@@ -174,6 +200,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    supabase.auth.signOut()
     dispatch({ type: 'LOGOUT' })
   }, [])
 

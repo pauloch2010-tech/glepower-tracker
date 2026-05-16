@@ -5,6 +5,7 @@ import { startQueueProcessor } from '@/shared/services/queue'
 
 // Feature pages
 import { LoginPage } from '@/features/auth/LoginPage'
+import { RegisterPage } from '@/features/auth/RegisterPage'
 import { StudentSelectPage } from '@/features/students/StudentSelectPage'
 import { StudentFormPage } from '@/features/students/StudentFormPage'
 import { StudentDetailPage } from '@/features/students/StudentDetailPage'
@@ -53,6 +54,9 @@ export function App() {
     switch (state.step) {
       case 'login':
         return <LoginPage />
+
+      case 'register':
+        return <RegisterPage />
 
       case 'student-select':
         return <StudentSelectPage />

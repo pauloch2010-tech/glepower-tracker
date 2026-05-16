@@ -71,6 +71,52 @@ async function supabaseLogin(pin: string): Promise<ApiResponse<AuthSession>> {
   }
 }
 
+async function supabaseLoginEmail(email: string, password: string): Promise<ApiResponse<AuthSession>> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error || !data.user) return { success: false, error: 'E-mail ou senha inválidos' }
+
+  const { data: trainer, error: tErr } = await supabase
+    .from('trainers')
+    .select('id, name')
+    .eq('auth_user_id', data.user.id)
+    .single()
+
+  if (tErr || !trainer) return { success: false, error: 'Perfil de treinador não encontrado' }
+
+  return {
+    success: true,
+    data: {
+      trainerId: trainer.id as string,
+      trainerName: trainer.name as string,
+      token: data.session?.access_token ?? 'supabase-session',
+      expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+    },
+  }
+}
+
+async function supabaseRegister(name: string, email: string, password: string): Promise<ApiResponse<AuthSession>> {
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error || !data.user) return { success: false, error: error?.message ?? 'Erro ao criar conta' }
+
+  const { data: trainer, error: tErr } = await supabase
+    .from('trainers')
+    .insert({ name, auth_user_id: data.user.id })
+    .select('id, name')
+    .single()
+
+  if (tErr || !trainer) return { success: false, error: 'Erro ao criar perfil de treinador' }
+
+  return {
+    success: true,
+    data: {
+      trainerId: trainer.id as string,
+      trainerName: trainer.name as string,
+      token: data.session?.access_token ?? 'supabase-session',
+      expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+    },
+  }
+}
+
 async function supabaseGetStudents(): Promise<ApiResponse<Student[]>> {
   const { data, error } = await supabase
     .from('students')
@@ -721,6 +767,20 @@ export const api = {
     if (USE_SUPABASE) return supabaseLogin(pin)
     if (SCRIPT_URL) return gasCall<AuthSession>('login', { pin })
     return mockCall<AuthSession>('login', { pin })
+  },
+
+  loginEmail(email: string, password: string): Promise<ApiResponse<AuthSession>> {
+    if (USE_SUPABASE) return supabaseLoginEmail(email, password)
+    return mockCall<AuthSession>('login', { email })
+  },
+
+  register(name: string, email: string, password: string): Promise<ApiResponse<AuthSession>> {
+    if (USE_SUPABASE) return supabaseRegister(name, email, password)
+    return mockCall<AuthSession>('login', {})
+  },
+
+  logoutSupabase(): Promise<{ error: unknown }> {
+    return supabase.auth.signOut()
   },
 
   getStudents(): Promise<ApiResponse<Student[]>> {

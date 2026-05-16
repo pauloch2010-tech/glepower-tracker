@@ -1,6 +1,7 @@
 // ─── Navigation Steps ────────────────────────────────────────────────────────
 export type AppStep =
   | 'login'
+  | 'register'
   | 'student-select'
   | 'student-form'
   | 'student-detail'
