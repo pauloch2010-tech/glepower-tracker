@@ -4,8 +4,10 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import type {
   AppStep,
   AuthSession,
@@ -16,6 +18,32 @@ import type {
 } from '@/shared/types'
 import { sessionStorage_ } from '@/shared/services/storage'
 import { supabase } from '@/shared/services/supabase'
+
+// ─── URL ↔ Step mapping ───────────────────────────────────────────────────────
+const STEP_TO_PATH: Partial<Record<AppStep, string>> = {
+  login:              '/',
+  register:           '/register',
+  'student-select':   '/students',
+  'student-form':     '/student/form',
+  'student-detail':   '/student',
+  anamnesis:          '/student/anamnesis',
+  'assessment-list':  '/student/assessments',
+  'assessment-form':  '/student/assessments/new',
+  'assessment-report':'/student/assessments/report',
+  'progress-report':  '/student/assessments/progress',
+  'workout-plan-list':'/student/workout',
+  'workout-plan-form':'/student/workout/new',
+  'workout-execution':'/student/workout/execute',
+  wellness:           '/student/wellness',
+  workout:            '/student/workout-session',
+  review:             '/student/review',
+  success:            '/student/success',
+  progress:           '/student/progress',
+}
+
+const PATH_TO_STEP: Record<string, AppStep> = Object.fromEntries(
+  Object.entries(STEP_TO_PATH).map(([step, path]) => [path, step as AppStep])
+)
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 const INITIAL_STATE: SessionState = {
@@ -117,6 +145,12 @@ export function useSession() {
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
+  const routerNavigate = useNavigate()
+  const location = useLocation()
+
+  // Ref to track current step without triggering popstate effect
+  const stepRef = useRef(state.step)
+  stepRef.current = state.step
 
   // Restore session on mount via Supabase auth state
   useEffect(() => {
@@ -150,6 +184,24 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     })
   }, [])
+
+  // Sync state.step → URL (push to browser history on every step change)
+  useEffect(() => {
+    const targetPath = STEP_TO_PATH[state.step]
+    if (targetPath && location.pathname !== targetPath) {
+      routerNavigate(targetPath, { replace: false })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.step])
+
+  // Sync URL → step (handles browser back/forward button)
+  useEffect(() => {
+    const step = PATH_TO_STEP[location.pathname]
+    if (step && step !== stepRef.current) {
+      dispatch({ type: 'NAVIGATE', payload: step })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname])
 
   // Persist on every state change (except logout — reducer handles clear)
   useEffect(() => {
