@@ -1,20 +1,18 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useSession } from '@/shared/store/SessionContext'
 import { AppShell } from '@/shared/components/layout/AppShell'
 import { startQueueProcessor } from '@/shared/services/queue'
+import { Spinner } from '@/shared/components/ui/Spinner'
 
-// Feature pages
+// ─── Eager imports (critical path — login, navigation, core pages) ────────────
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { StudentSelectPage } from '@/features/students/StudentSelectPage'
 import { StudentFormPage } from '@/features/students/StudentFormPage'
 import { StudentDetailPage } from '@/features/students/StudentDetailPage'
-import { AnamnesisFormPage } from '@/features/anamnesis/AnamnesisFormPage'
 import { AnamnesisClientPage } from '@/features/anamnesis/AnamnesisClientPage'
 import { AssessmentListPage } from '@/features/assessments/AssessmentListPage'
 import { AssessmentFormPage } from '@/features/assessments/AssessmentFormPage'
-import { AssessmentReportPage } from '@/features/assessments/AssessmentReportPage'
-import { ProgressReportPage } from '@/features/assessments/ProgressReportPage'
 import { WorkoutPlanListPage } from '@/features/workout/WorkoutPlanListPage'
 import { WorkoutPlanFormPage } from '@/features/workout/WorkoutPlanFormPage'
 import { WorkoutExecutionPage } from '@/features/workout/WorkoutExecutionPage'
@@ -22,10 +20,35 @@ import { WellnessPage } from '@/features/wellness/WellnessPage'
 import { WorkoutPage } from '@/features/workout/WorkoutPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
 import { SuccessPage } from '@/features/success/SuccessPage'
-import { ProgressPage } from '@/features/progress/ProgressPage'
+
+// ─── Lazy imports (heavy pages loaded on demand) ──────────────────────────────
+// AnamnesisFormPage uses jspdf + html2canvas for PDF export
+const AnamnesisFormPage = lazy(() =>
+  import('@/features/anamnesis/AnamnesisFormPage').then((m) => ({ default: m.AnamnesisFormPage }))
+)
+// AssessmentReportPage uses jspdf + html2canvas
+const AssessmentReportPage = lazy(() =>
+  import('@/features/assessments/AssessmentReportPage').then((m) => ({ default: m.AssessmentReportPage }))
+)
+// ProgressReportPage uses jspdf + html2canvas
+const ProgressReportPage = lazy(() =>
+  import('@/features/assessments/ProgressReportPage').then((m) => ({ default: m.ProgressReportPage }))
+)
+// ProgressPage uses recharts
+const ProgressPage = lazy(() =>
+  import('@/features/progress/ProgressPage').then((m) => ({ default: m.ProgressPage }))
+)
 
 // Detected once at module load — no re-evaluation needed
 const CLIENT_TOKEN = new URLSearchParams(window.location.search).get('token')
+
+function PageFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-dvh bg-bg">
+      <Spinner size="lg" />
+    </div>
+  )
+}
 
 export function App() {
   const { state, navigate, setEditingStudent } = useSession()
@@ -123,5 +146,11 @@ export function App() {
     }
   }
 
-  return <AppShell>{renderStep()}</AppShell>
+  return (
+    <AppShell>
+      <Suspense fallback={<PageFallback />}>
+        {renderStep()}
+      </Suspense>
+    </AppShell>
+  )
 }

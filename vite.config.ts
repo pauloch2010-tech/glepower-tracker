@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'GlePower Tracker',
         short_name: 'GlePower',
         description: 'Acompanhamento de alunos — avaliação física e treino',
-        theme_color: '#000000',
-        background_color: '#000000',
+        theme_color: '#4A0D67',
+        background_color: '#0B0B0D',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
@@ -65,6 +65,22 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Charts — only loaded when ProgressPage is visited
+          recharts: ['recharts'],
+          // PDF generation — only loaded when a report is opened
+          pdf: ['jspdf', 'html2canvas'],
+          // Supabase client — shared across app, separate from main app code
+          supabase: ['@supabase/supabase-js'],
+          // React core — rarely changes, good for long-term caching
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
     },
   },
   server: {
