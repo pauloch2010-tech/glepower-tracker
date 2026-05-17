@@ -334,6 +334,15 @@ async function supabaseGetAnamnesis(studentId: string): Promise<ApiResponse<Anam
   return { success: true, data: data ? dbToAnamnesis(data as Record<string, unknown>) : null }
 }
 
+async function supabaseDeleteAnamnesis(studentId: string): Promise<ApiResponse<void>> {
+  const { error } = await supabase
+    .from('anamnesis')
+    .delete()
+    .eq('student_id', studentId)
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
 async function supabaseSaveAnamnesis(a: Omit<Anamnesis, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Anamnesis>> {
   const { data, error } = await supabase
     .from('anamnesis')
@@ -895,6 +904,10 @@ export const api = {
   },
   saveAnamnesis(a: Omit<Anamnesis, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Anamnesis>> {
     if (USE_SUPABASE) return supabaseSaveAnamnesis(a)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  deleteAnamnesis(studentId: string): Promise<ApiResponse<void>> {
+    if (USE_SUPABASE) return supabaseDeleteAnamnesis(studentId)
     return Promise.resolve({ success: false, error: 'Supabase não configurado' })
   },
 

@@ -98,6 +98,8 @@ export function AnamnesisFormPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<Partial<Anamnesis>>({})
   const [linkCopied, setLinkCopied] = useState(false)
@@ -133,6 +135,16 @@ export function AnamnesisFormPage() {
       return
     }
     navigate('student-detail')
+  }
+
+  const handleDeleteAnamnesis = async () => {
+    if (!student) return
+    setDeleting(true)
+    const res = await api.deleteAnamnesis(student.id)
+    setDeleting(false)
+    if (res.success) {
+      navigate('student-detail')
+    }
   }
 
   const handleGenerateLink = async () => {
@@ -230,6 +242,22 @@ export function AnamnesisFormPage() {
           </h1>
         </div>
       </div>
+      {isEditing && (
+        <button
+          onClick={() => {
+            if (confirmDelete) {
+              handleDeleteAnamnesis()
+            } else {
+              setConfirmDelete(true)
+              setTimeout(() => setConfirmDelete(false), 4000)
+            }
+          }}
+          disabled={deleting}
+          className="text-xs px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
+        >
+          {deleting ? 'Removendo...' : confirmDelete ? 'Confirmar exclusão?' : 'Limpar anamnese'}
+        </button>
+      )}
     </div>
   )
 
