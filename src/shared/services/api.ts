@@ -89,7 +89,7 @@ async function supabaseGetOrCreateTrainer(
   name: string,
   accessToken: string,
 ): Promise<ApiResponse<AuthSession>> {
-  // Try to find existing trainer record
+  // 1. Try to find trainer already linked to this auth user
   const { data: existing } = await supabase
     .from('trainers')
     .select('id, name')
@@ -108,7 +108,35 @@ async function supabaseGetOrCreateTrainer(
     }
   }
 
-  // No trainer record yet — create it (works with active session / RLS)
+  // 2. Look for an orphaned trainer (auth_user_id IS NULL) — legacy record before email auth
+  const { data: orphans } = await supabase
+    .from('trainers')
+    .select('id, name')
+    .is('auth_user_id', null)
+
+  if (orphans && orphans.length === 1) {
+    // Exactly one unlinked trainer — claim it
+    const { data: claimed, error: claimErr } = await supabase
+      .from('trainers')
+      .update({ auth_user_id: userId })
+      .eq('id', orphans[0].id)
+      .select('id, name')
+      .single()
+
+    if (!claimErr && claimed) {
+      return {
+        success: true,
+        data: {
+          trainerId: claimed.id as string,
+          trainerName: claimed.name as string,
+          token: accessToken,
+          expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+        },
+      }
+    }
+  }
+
+  // 3. Create new trainer record
   const { data: trainer, error: tErr } = await supabase
     .from('trainers')
     .insert({ name, auth_user_id: userId })
