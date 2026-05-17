@@ -75,46 +75,25 @@ async function supabaseLoginEmail(email: string, password: string): Promise<ApiR
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error || !data.user) return { success: false, error: 'E-mail ou senha inválidos' }
 
-  const { data: trainer, error: tErr } = await supabase
-    .from('trainers')
-    .select('id, name')
-    .eq('auth_user_id', data.user.id)
-    .single()
-
-  if (tErr || !trainer) return { success: false, error: 'Perfil de treinador não encontrado' }
-
-  return {
-    success: true,
-    data: {
-      trainerId: trainer.id as string,
-      trainerName: trainer.name as string,
-      token: data.session?.access_token ?? 'supabase-session',
-      expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-    },
-  }
+  // Use user's display name from metadata as fallback for trainer name
+  const fallbackName = (data.user.user_metadata?.name as string | undefined) ?? email.split('@')[0]
+  return supabaseGetOrCreateTrainer(
+    data.user.id,
+    fallbackName,
+    data.session?.access_token ?? '',
+  )
 }
 
-async function supabaseRegister(name: string, email: string, password: string): Promise<ApiResponse<AuthSession>> {
-  // Pass name in metadata so a DB trigger can auto-create the trainer record
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { name } },
-  })
-  if (error) return { success: false, error: error.message }
-  if (!data.user) return { success: false, error: 'Erro ao criar conta' }
-
-  // Email confirmation required — no session yet
-  // Return success without data; UI will show "check your email"
-  if (!data.session) {
-    return { success: true }
-  }
-
-  // Session exists (email confirmation disabled) — get or create trainer record
+async function supabaseGetOrCreateTrainer(
+  userId: string,
+  name: string,
+  accessToken: string,
+): Promise<ApiResponse<AuthSession>> {
+  // Try to find existing trainer record
   const { data: existing } = await supabase
     .from('trainers')
     .select('id, name')
-    .eq('auth_user_id', data.user.id)
+    .eq('auth_user_id', userId)
     .maybeSingle()
 
   if (existing) {
@@ -123,30 +102,60 @@ async function supabaseRegister(name: string, email: string, password: string): 
       data: {
         trainerId: existing.id as string,
         trainerName: existing.name as string,
-        token: data.session.access_token,
+        token: accessToken,
         expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
       },
     }
   }
 
-  // Trigger may not exist yet — insert directly (works when RLS session is active)
+  // No trainer record yet — create it (works with active session / RLS)
   const { data: trainer, error: tErr } = await supabase
     .from('trainers')
-    .insert({ name, auth_user_id: data.user.id })
+    .insert({ name, auth_user_id: userId })
     .select('id, name')
     .single()
 
-  if (tErr || !trainer) return { success: false, error: 'Erro ao criar perfil de treinador' }
+  if (tErr || !trainer) {
+    return { success: false, error: 'Erro ao criar perfil de treinador. Contate o suporte.' }
+  }
 
   return {
     success: true,
     data: {
       trainerId: trainer.id as string,
       trainerName: trainer.name as string,
-      token: data.session.access_token,
+      token: accessToken,
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
     },
   }
+}
+
+async function supabaseRegister(name: string, email: string, password: string): Promise<ApiResponse<AuthSession>> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name } },
+  })
+
+  // "User already registered" — fall back to login with provided credentials
+  if (error?.message?.toLowerCase().includes('already registered') ||
+      error?.message?.toLowerCase().includes('already been registered')) {
+    const loginResult = await supabaseLoginEmail(email, password)
+    if (!loginResult.success) {
+      return { success: false, error: 'Este e-mail já está cadastrado. Verifique sua senha ou acesse pelo login.' }
+    }
+    return loginResult
+  }
+
+  if (error) return { success: false, error: error.message }
+  if (!data.user) return { success: false, error: 'Erro ao criar conta' }
+
+  // Email confirmation required — no session yet; UI shows "check your email"
+  if (!data.session) {
+    return { success: true }
+  }
+
+  return supabaseGetOrCreateTrainer(data.user.id, name, data.session.access_token)
 }
 
 async function supabaseGetStudents(): Promise<ApiResponse<Student[]>> {
