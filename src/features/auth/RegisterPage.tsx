@@ -16,6 +16,7 @@ export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [confirmEmailSent, setConfirmEmailSent] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -37,8 +38,14 @@ export function RegisterPage() {
     try {
       const res = await api.register(name.trim(), email.trim(), password)
 
-      if (!res.success || !res.data) {
+      if (!res.success) {
         showToast(res.error ?? 'Erro ao criar conta. Tente novamente.', 'error')
+        return
+      }
+
+      // No session = email confirmation required
+      if (!res.data) {
+        setConfirmEmailSent(true)
         return
       }
 
@@ -75,6 +82,30 @@ export function RegisterPage() {
             Tracker
           </p>
         </div>
+
+        {/* Email confirmation sent */}
+        {confirmEmailSent ? (
+          <div className="flex flex-col items-center gap-6 text-center animate-fade-in">
+            <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-semibold mb-1">Confirme seu e-mail</p>
+              <p className="text-text-secondary text-sm">
+                Enviamos um link de confirmação para{' '}
+                <span className="text-white font-mono">{email}</span>.
+                Clique no link para ativar sua conta.
+              </p>
+              <p className="text-text-muted text-xs mt-2">Verifique também a caixa de spam.</p>
+            </div>
+            <Button size="full" onClick={() => navigate('login')}>
+              Ir para o login
+            </Button>
+          </div>
+        ) : (
+          <>
 
         <h2 className="text-white text-xl font-semibold text-center mb-6">
           Criar Conta
@@ -170,6 +201,8 @@ export function RegisterPage() {
             Entrar
           </button>
         </p>
+          </>
+        )}
       </div>
     </PageContainer>
   )

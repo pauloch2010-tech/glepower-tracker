@@ -95,9 +95,41 @@ async function supabaseLoginEmail(email: string, password: string): Promise<ApiR
 }
 
 async function supabaseRegister(name: string, email: string, password: string): Promise<ApiResponse<AuthSession>> {
-  const { data, error } = await supabase.auth.signUp({ email, password })
-  if (error || !data.user) return { success: false, error: error?.message ?? 'Erro ao criar conta' }
+  // Pass name in metadata so a DB trigger can auto-create the trainer record
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name } },
+  })
+  if (error) return { success: false, error: error.message }
+  if (!data.user) return { success: false, error: 'Erro ao criar conta' }
 
+  // Email confirmation required — no session yet
+  // Return success without data; UI will show "check your email"
+  if (!data.session) {
+    return { success: true }
+  }
+
+  // Session exists (email confirmation disabled) — get or create trainer record
+  const { data: existing } = await supabase
+    .from('trainers')
+    .select('id, name')
+    .eq('auth_user_id', data.user.id)
+    .maybeSingle()
+
+  if (existing) {
+    return {
+      success: true,
+      data: {
+        trainerId: existing.id as string,
+        trainerName: existing.name as string,
+        token: data.session.access_token,
+        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      },
+    }
+  }
+
+  // Trigger may not exist yet — insert directly (works when RLS session is active)
   const { data: trainer, error: tErr } = await supabase
     .from('trainers')
     .insert({ name, auth_user_id: data.user.id })
@@ -111,7 +143,7 @@ async function supabaseRegister(name: string, email: string, password: string): 
     data: {
       trainerId: trainer.id as string,
       trainerName: trainer.name as string,
-      token: data.session?.access_token ?? 'supabase-session',
+      token: data.session.access_token,
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
     },
   }
