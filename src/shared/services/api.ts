@@ -136,10 +136,10 @@ async function supabaseGetOrCreateTrainer(
     }
   }
 
-  // 3. Create new trainer record
+  // 3. Create new trainer record (pin='email-auth' satisfies legacy NOT NULL constraint)
   const { data: trainer, error: tErr } = await supabase
     .from('trainers')
-    .insert({ name, auth_user_id: userId })
+    .insert({ name, auth_user_id: userId, pin: 'email-auth' })
     .select('id, name')
     .single()
 
