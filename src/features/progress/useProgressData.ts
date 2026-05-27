@@ -1,10 +1,7 @@
 // src/features/progress/useProgressData.ts
-// Hook que processa execuções do Supabase e calcula métricas para o dashboard
 
 import { useMemo } from 'react'
 import type { WorkoutExecution } from '@/shared/types'
-
-// ─── Interfaces de saída ──────────────────────────────────────────────────────
 
 export interface WeeklyVolume {
   label: string
@@ -15,7 +12,7 @@ export interface WeeklyVolume {
 export interface ExerciseProgress {
   name: string
   muscleGroup: string
-  data: Array<{ date: string; maxLoad: number; avgLoad: number }>
+  data: Array<{ date: string; maxLoad: number; totalVolume: number }>
 }
 
 export interface MuscleGroupStats {
@@ -32,8 +29,6 @@ export interface ProgressData {
   muscleGroupStats: MuscleGroupStats[]
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function startOfWeek(date: Date): Date {
   const d = new Date(date)
   const day = d.getDay()
@@ -46,13 +41,10 @@ function getWeekLabel(date: Date): string {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
-// Um set conta como realizado se foi marcado como concluído OU se tem peso registrado
+// Um set conta se foi marcado como concluído OU se tem peso registrado
 function setHasData(s: { completed: boolean; weight?: number | null; reps?: number | null }): boolean {
   return s.completed || ((s.weight ?? 0) > 0 && (s.reps ?? 0) > 0)
 }
-
-// ─── Hook principal ───────────────────────────────────────────────────────────
-// Aceita WorkoutExecution[] já carregadas — o fetch é feito pelo componente pai.
 
 export function useProgressData(executions: WorkoutExecution[]): ProgressData {
   return useMemo(() => {
@@ -60,7 +52,6 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
     const eightWeeksAgo = new Date(now)
     eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56)
 
-    // Execuções concluídas nas últimas 8 semanas
     const recent = executions.filter(
       (e) => e.status === 'completed' && new Date(e.date) >= eightWeeksAgo,
     )
@@ -123,18 +114,21 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
               data: [],
             })
           }
-          const loads = ex.sets
-            .filter((s) => (s.weight ?? 0) > 0)
-            .map((s) => s.weight ?? 0)
-          if (loads.length === 0) return
 
-          const maxLoad = Math.max(...loads)
-          const avgLoad = parseFloat((loads.reduce((a, b) => a + b, 0) / loads.length).toFixed(1))
+          const activeSets = ex.sets.filter((s) => (s.weight ?? 0) > 0)
+          if (activeSets.length === 0) return
+
+          const maxLoad = Math.max(...activeSets.map((s) => s.weight ?? 0))
+          const totalVolume = activeSets.reduce(
+            (sum, s) => sum + (s.weight ?? 0) * (s.reps ?? 0),
+            0,
+          )
+
           const dateLabel = new Date(exec.date).toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: 'short',
           })
-          exerciseMap.get(ex.exerciseName)!.data.push({ date: dateLabel, maxLoad, avgLoad })
+          exerciseMap.get(ex.exerciseName)!.data.push({ date: dateLabel, maxLoad, totalVolume })
         })
       })
 
