@@ -36,7 +36,6 @@ export function StudentDetailPage() {
       if (asRes.success && asRes.data) setAssessments(asRes.data)
       if (pRes.success && pRes.data) setPlans(pRes.data)
       if (eRes.success && eRes.data) setExecutions(eRes.data)
-      // Pending review flag comes from student object (refreshed from session)
       setPendingReview(student.anamnesisPendingReview ?? false)
       setLoading(false)
     })
@@ -83,7 +82,6 @@ export function StudentDetailPage() {
   }
 
   const handleOpenAnamnesis = () => {
-    // Clear pending review flag when trainer opens
     if (pendingReview) {
       api.clearPendingReview(student.id).then(() => setPendingReview(false))
     }
@@ -217,10 +215,10 @@ export function StudentDetailPage() {
             )}
           </button>
 
-          {/* Progressão */}
+          {/* Progressão — dashboard de treinos (desde o 1º treino) */}
           <button
-            onClick={() => navigate('progress-report')}
-            disabled={assessments.length === 0}
+            onClick={() => navigate('progress')}
+            disabled={loading || executions.length === 0}
             className="relative flex flex-col items-start gap-2 p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/10 to-violet-500/[0.02] hover:border-violet-500/40 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
@@ -230,7 +228,11 @@ export function StudentDetailPage() {
             </div>
             <p className="font-semibold text-white text-sm">Progressão</p>
             <p className="text-[11px] text-text-muted leading-tight">
-              {assessments.length < 2 ? 'Precisa 2+ avaliações' : 'Ver gráficos'}
+              {loading
+                ? '...'
+                : executions.length === 0
+                ? 'Nenhum treino ainda'
+                : `${completedExecs.length} sessão${completedExecs.length !== 1 ? 'ões' : ''}`}
             </p>
           </button>
         </div>
@@ -272,7 +274,6 @@ export function StudentDetailPage() {
             </button>
           </div>
 
-          {/* Fallback mobile: exibe o link para copiar manualmente */}
           {generatedLink && !linkCopied && (
             <div className="mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/10">
               <p className="text-[10px] text-text-muted mb-1.5 uppercase tracking-wider">Copie o link abaixo:</p>
