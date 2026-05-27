@@ -1,5 +1,4 @@
 // src/features/progress/ProgressPage.tsx
-// Dashboard de progressão com 3 tabs: Resumo | Exercícios | Músculos
 
 import { useState, useEffect, type ReactNode } from "react";
 import {
@@ -11,7 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
+  ComposedChart,
   Line,
   Legend,
 } from "recharts";
@@ -27,14 +26,19 @@ interface ProgressPageProps {
 
 type ActiveTab = "resumo" | "exercicios" | "musculos";
 
-const LineTooltip = ({ active, payload, label }: any) => {
+const ExerciseTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#1a0f26] border border-white/20 rounded-xl p-3 shadow-xl">
-      <p className="text-white/60 text-xs mb-1">{label}</p>
+    <div className="bg-[#1a0f26] border border-white/20 rounded-xl p-3 shadow-xl min-w-[140px]">
+      <p className="text-white/60 text-xs mb-2">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} className="text-sm font-semibold" style={{ color: entry.color }}>
-          {entry.name}: {entry.value}kg
+          {entry.name}:{" "}
+          {entry.name === "Volume"
+            ? entry.value >= 1000
+              ? `${(entry.value / 1000).toFixed(1)}t`
+              : `${entry.value}kg`
+            : `${entry.value}kg`}
         </p>
       ))}
     </div>
@@ -205,7 +209,7 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
                   <p className="text-xs text-white/40 mb-4">{exercise.muscleGroup}</p>
 
                   {exercise.data.length === 1 ? (
-                    /* Primeira sessão — mostra valores, ainda sem gráfico de evolução */
+                    /* Primeira sessão — card com valores, sem gráfico ainda */
                     <div className="flex justify-around items-center py-4">
                       <div className="text-center">
                         <p className="text-xs text-white/40 mb-1">Carga Máx</p>
@@ -213,8 +217,12 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
                       </div>
                       <div className="w-px h-10 bg-white/10" />
                       <div className="text-center">
-                        <p className="text-xs text-white/40 mb-1">Carga Média</p>
-                        <p className="text-2xl font-bold text-white/70">{exercise.data[0].avgLoad}kg</p>
+                        <p className="text-xs text-white/40 mb-1">Volume</p>
+                        <p className="text-2xl font-bold text-violet-400">
+                          {exercise.data[0].totalVolume >= 1000
+                            ? `${(exercise.data[0].totalVolume / 1000).toFixed(1)}t`
+                            : `${exercise.data[0].totalVolume}kg`}
+                        </p>
                       </div>
                       <div className="w-px h-10 bg-white/10" />
                       <div className="text-center">
@@ -223,21 +231,66 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
                       </div>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={160}>
-                      <LineChart data={exercise.data} margin={{ top: 0, right: 4, left: -20, bottom: 0 }}>
+                    /* 2+ sessões — gráfico combinado com eixo duplo */
+                    <ResponsiveContainer width="100%" height={180}>
+                      <ComposedChart data={exercise.data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                        <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}kg`} />
-                        <Tooltip content={<LineTooltip />} />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        {/* Eixo esquerdo: Carga Máx (kg) */}
+                        <YAxis
+                          yAxisId="load"
+                          tick={{ fill: "#E91E63", fontSize: 9 }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v) => `${v}kg`}
+                          width={38}
+                        />
+                        {/* Eixo direito: Volume (kg ou t) */}
+                        <YAxis
+                          yAxisId="vol"
+                          orientation="right"
+                          tick={{ fill: "#7C3AED", fontSize: 9 }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${v}kg`}
+                          width={36}
+                        />
+                        <Tooltip content={<ExerciseTooltip />} />
                         <Legend
                           iconType="circle"
                           iconSize={8}
-                          wrapperStyle={{ fontSize: 11, color: "rgba(255,255,255,0.5)", paddingTop: 8 }}
-                          formatter={(value) => <span style={{ color: "#E91E63" }}>{value}</span>}
+                          wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                          formatter={(value, entry: any) => (
+                            <span style={{ color: entry.color }}>{value}</span>
+                          )}
                         />
-                        <Line type="monotone" dataKey="maxLoad" name="Carga Máx" stroke="#E91E63" strokeWidth={2} dot={{ fill: "#E91E63", r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: "#E91E63" }} />
-                        <Line type="monotone" dataKey="avgLoad" name="Carga Média" stroke="#E91E63" strokeWidth={2} strokeDasharray="4 4" dot={{ fill: "#E91E63", r: 3, strokeWidth: 0, fillOpacity: 0.6 }} activeDot={{ r: 5, fill: "#E91E63", fillOpacity: 0.7 }} />
-                      </LineChart>
+                        <Line
+                          yAxisId="load"
+                          type="monotone"
+                          dataKey="maxLoad"
+                          name="Carga Máx"
+                          stroke="#E91E63"
+                          strokeWidth={2.5}
+                          dot={{ fill: "#E91E63", r: 4, strokeWidth: 0 }}
+                          activeDot={{ r: 6, fill: "#E91E63" }}
+                        />
+                        <Line
+                          yAxisId="vol"
+                          type="monotone"
+                          dataKey="totalVolume"
+                          name="Volume"
+                          stroke="#7C3AED"
+                          strokeWidth={2}
+                          strokeDasharray="5 3"
+                          dot={{ fill: "#7C3AED", r: 3, strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: "#7C3AED" }}
+                        />
+                      </ComposedChart>
                     </ResponsiveContainer>
                   )}
                 </div>
