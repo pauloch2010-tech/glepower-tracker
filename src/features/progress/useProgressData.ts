@@ -46,6 +46,11 @@ function getWeekLabel(date: Date): string {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
+// Um set conta como realizado se foi marcado como concluído OU se tem peso registrado
+function setHasData(s: { completed: boolean; weight?: number | null; reps?: number | null }): boolean {
+  return s.completed || ((s.weight ?? 0) > 0 && (s.reps ?? 0) > 0)
+}
+
 // ─── Hook principal ───────────────────────────────────────────────────────────
 // Aceita WorkoutExecution[] já carregadas — o fetch é feito pelo componente pai.
 
@@ -55,7 +60,7 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
     const eightWeeksAgo = new Date(now)
     eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56)
 
-    // Apenas execuções concluídas nas últimas 8 semanas
+    // Execuções concluídas nas últimas 8 semanas
     const recent = executions.filter(
       (e) => e.status === 'completed' && new Date(e.date) >= eightWeeksAgo,
     )
@@ -65,7 +70,7 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
     recent.forEach((exec) => {
       exec.exercises.forEach((ex) => {
         ex.sets.forEach((s) => {
-          if (s.completed) totalVolumeKg += (s.weight ?? 0) * (s.reps ?? 0)
+          if (setHasData(s)) totalVolumeKg += (s.weight ?? 0) * (s.reps ?? 0)
         })
       })
     })
@@ -86,7 +91,7 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
       const entry = weekMap.get(key) ?? { volume: 0, weekStart: ws }
       exec.exercises.forEach((ex) => {
         ex.sets.forEach((s) => {
-          if (s.completed) entry.volume += (s.weight ?? 0) * (s.reps ?? 0)
+          if (setHasData(s)) entry.volume += (s.weight ?? 0) * (s.reps ?? 0)
         })
       })
       weekMap.set(key, entry)
@@ -119,7 +124,7 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
             })
           }
           const loads = ex.sets
-            .filter((s) => s.completed && (s.weight ?? 0) > 0)
+            .filter((s) => (s.weight ?? 0) > 0)
             .map((s) => s.weight ?? 0)
           if (loads.length === 0) return
 
@@ -145,7 +150,8 @@ export function useProgressData(executions: WorkoutExecution[]): ProgressData {
       .forEach((exec) => {
         exec.exercises.forEach((ex) => {
           const group = ex.subGroup || ex.muscleGroup || 'Outros'
-          muscleMap.set(group, (muscleMap.get(group) ?? 0) + ex.sets.filter((s) => s.completed).length)
+          const doneSets = ex.sets.filter((s) => setHasData(s)).length
+          if (doneSets > 0) muscleMap.set(group, (muscleMap.get(group) ?? 0) + doneSets)
         })
       })
 
