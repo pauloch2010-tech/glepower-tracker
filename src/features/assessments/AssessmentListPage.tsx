@@ -76,60 +76,84 @@ export function AssessmentListPage() {
           </Card>
         ) : (
           <>
+            {/* Botão de evolução física — disponível a partir da 1ª avaliação */}
+            <button
+              onClick={() => navigate('progress-report')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-violet-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-white">Ver Evolução Física</p>
+                  <p className="text-[11px] text-text-muted">
+                    {assessments.length === 1
+                      ? 'Snapshot da avaliação atual'
+                      : `Comparativo de ${assessments.length} avaliações`}
+                  </p>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-violet-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {assessments.map((a, idx) => {
-              const total = assessments.length
-              const number = total - idx
-              return (
-                <Card key={a.id} className="flex flex-col gap-3">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="font-display text-lg italic font-black text-pink-300">
-                        #{number}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-sm">
-                        {new Date(a.assessmentDate).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric',
-                        })}
-                      </p>
-                      <p className="text-[11px] text-text-muted mt-0.5">
-                        {PROTOCOL_LABELS[a.protocol]}
-                      </p>
-                      <div className="flex gap-3 mt-1.5 font-mono text-[11px]">
-                        <span className="text-text-muted">
-                          Peso <span className="text-white">{a.weightKg?.toFixed(1) ?? '—'}kg</span>
-                        </span>
-                        <span className="text-text-muted">
-                          %G <span className="text-white">{a.bodyFatPct?.toFixed(1) ?? '—'}%</span>
-                        </span>
-                        <span className="text-text-muted">
-                          IMC <span className="text-white">{a.bmi?.toFixed(1) ?? '—'}</span>
+              {assessments.map((a, idx) => {
+                const total = assessments.length
+                const number = total - idx
+                return (
+                  <Card key={a.id} className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex items-center justify-center flex-shrink-0">
+                        <span className="font-display text-lg italic font-black text-pink-300">
+                          #{number}
                         </span>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-white text-sm">
+                          {new Date(a.assessmentDate).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </p>
+                        <p className="text-[11px] text-text-muted mt-0.5">
+                          {PROTOCOL_LABELS[a.protocol]}
+                        </p>
+                        <div className="flex gap-3 mt-1.5 font-mono text-[11px]">
+                          <span className="text-text-muted">
+                            Peso <span className="text-white">{a.weightKg?.toFixed(1) ?? '—'}kg</span>
+                          </span>
+                          <span className="text-text-muted">
+                            %G <span className="text-white">{a.bodyFatPct?.toFixed(1) ?? '—'}%</span>
+                          </span>
+                          <span className="text-text-muted">
+                            IMC <span className="text-white">{a.bmi?.toFixed(1) ?? '—'}</span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  {/* Ações */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleViewReport(a.id!)}
-                      className="flex-1 py-2 rounded-xl bg-primary/10 border border-primary/20 text-pink-300 text-xs font-medium hover:bg-primary/20 transition-all"
-                    >
-                      Ver Relatório
-                    </button>
-                    <button
-                      onClick={() => handleEdit(a.id!)}
-                      className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-text-muted text-xs hover:bg-white/10 transition-all"
-                    >
-                      Editar
-                    </button>
-                  </div>
-                </Card>
-              )
-            })}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewReport(a.id!)}
+                        className="flex-1 py-2 rounded-xl bg-primary/10 border border-primary/20 text-pink-300 text-xs font-medium hover:bg-primary/20 transition-all"
+                      >
+                        Ver Relatório
+                      </button>
+                      <button
+                        onClick={() => handleEdit(a.id!)}
+                        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-text-muted text-xs hover:bg-white/10 transition-all"
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  </Card>
+                )
+              })}
             </div>
 
             <Button onClick={handleNew} className="mt-2 mb-8">
