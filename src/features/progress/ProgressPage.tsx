@@ -19,8 +19,6 @@ import { useProgressData } from "./useProgressData";
 import { api } from "@/shared/services/api";
 import type { WorkoutExecution } from "@/shared/types";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
 interface ProgressPageProps {
   studentId: string;
   studentName: string;
@@ -28,8 +26,6 @@ interface ProgressPageProps {
 }
 
 type ActiveTab = "resumo" | "exercicios" | "musculos";
-
-// ─── Tooltip customizado para gráfico de linha ────────────────────────────────
 
 const LineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -45,21 +41,15 @@ const LineTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// ─── Tooltip para gráfico de barras ──────────────────────────────────────────
-
 const BarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-[#1a0f26] border border-white/20 rounded-xl p-3 shadow-xl">
       <p className="text-white/60 text-xs mb-1">{label}</p>
-      <p className="text-sm font-semibold text-primary">
-        {payload[0].value}t
-      </p>
+      <p className="text-sm font-semibold text-primary">{payload[0].value}t</p>
     </div>
   );
 };
-
-// ─── Componente principal ─────────────────────────────────────────────────────
 
 export function ProgressPage({ studentId, studentName, onBack }: ProgressPageProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("resumo");
@@ -108,7 +98,7 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-white/[0.08]">
         <div className="flex items-center gap-3 px-4 py-4">
           <button
@@ -120,12 +110,11 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
             </svg>
           </button>
           <div>
-            <h1 className="text-lg font-bold text-white">Progressão</h1>
+            <h1 className="text-lg font-bold text-white">Progressão de Treinos</h1>
             <p className="text-xs text-white/40">{studentName} · Evolução de carga e volume</p>
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex px-4 pb-3 gap-2">
           {tabs.map((tab) => (
             <button
@@ -145,10 +134,9 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
       </div>
 
       <div className="px-4 py-4 space-y-4 pb-8">
-        {/* ════════════════════════ ABA RESUMO ════════════════════════ */}
+        {/* ABA RESUMO */}
         {activeTab === "resumo" && (
           <>
-            {/* Cards de stats */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                 <p className="text-xs text-white/40 mb-1">Volume Total</p>
@@ -164,7 +152,6 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
               </div>
             </div>
 
-            {/* Gráfico de volume semanal */}
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
               <h3 className="font-bold text-white mb-1">Volume Semanal Total</h3>
               <p className="text-xs text-white/40 mb-4">Últimas 8 semanas (em toneladas)</p>
@@ -185,25 +172,12 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={data.weeklyVolume} margin={{ top: 0, right: 4, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v) => `${v}t`}
-                    />
+                    <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}t`} />
                     <Tooltip content={<BarTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
                     <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
                       {data.weeklyVolume.map((entry, index) => (
-                        <Cell
-                          key={index}
-                          fill={entry.isCurrent ? "#E91E63" : "#2a2a3e"}
-                        />
+                        <Cell key={index} fill={entry.isCurrent ? "#E91E63" : "#2a2a3e"} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -213,7 +187,7 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
           </>
         )}
 
-        {/* ════════════════════════ ABA EXERCÍCIOS ════════════════════════ */}
+        {/* ABA EXERCÍCIOS */}
         {activeTab === "exercicios" && (
           <>
             {data.exerciseProgress.length === 0 ? (
@@ -226,61 +200,43 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
               </div>
             ) : (
               data.exerciseProgress.map((exercise) => (
-                <div
-                  key={exercise.name}
-                  className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4"
-                >
+                <div key={exercise.name} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                   <h3 className="font-bold text-white text-base">{exercise.name}</h3>
                   <p className="text-xs text-white/40 mb-4">{exercise.muscleGroup}</p>
 
-                  {exercise.data.length < 2 ? (
-                    <div className="py-4 text-center text-white/30 text-xs">
-                      Registre mais sessões para ver a evolução
+                  {exercise.data.length === 1 ? (
+                    /* Primeira sessão — mostra valores, ainda sem gráfico de evolução */
+                    <div className="flex justify-around items-center py-4">
+                      <div className="text-center">
+                        <p className="text-xs text-white/40 mb-1">Carga Máx</p>
+                        <p className="text-2xl font-bold text-primary">{exercise.data[0].maxLoad}kg</p>
+                      </div>
+                      <div className="w-px h-10 bg-white/10" />
+                      <div className="text-center">
+                        <p className="text-xs text-white/40 mb-1">Carga Média</p>
+                        <p className="text-2xl font-bold text-white/70">{exercise.data[0].avgLoad}kg</p>
+                      </div>
+                      <div className="w-px h-10 bg-white/10" />
+                      <div className="text-center">
+                        <p className="text-xs text-white/40 mb-1">Data</p>
+                        <p className="text-sm font-semibold text-white/60">{exercise.data[0].date}</p>
+                      </div>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={160}>
                       <LineChart data={exercise.data} margin={{ top: 0, right: 4, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                          tickFormatter={(v) => `${v}kg`}
-                        />
+                        <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}kg`} />
                         <Tooltip content={<LineTooltip />} />
                         <Legend
                           iconType="circle"
                           iconSize={8}
                           wrapperStyle={{ fontSize: 11, color: "rgba(255,255,255,0.5)", paddingTop: 8 }}
-                          formatter={(value) => (
-                            <span style={{ color: "#E91E63" }}>{value}</span>
-                          )}
+                          formatter={(value) => <span style={{ color: "#E91E63" }}>{value}</span>}
                         />
-                        <Line
-                          type="monotone"
-                          dataKey="maxLoad"
-                          name="Carga Máx"
-                          stroke="#E91E63"
-                          strokeWidth={2}
-                          dot={{ fill: "#E91E63", r: 4, strokeWidth: 0 }}
-                          activeDot={{ r: 6, fill: "#E91E63" }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="avgLoad"
-                          name="Carga Média"
-                          stroke="#E91E63"
-                          strokeWidth={2}
-                          strokeDasharray="4 4"
-                          dot={{ fill: "#E91E63", r: 3, strokeWidth: 0, fillOpacity: 0.6 }}
-                          activeDot={{ r: 5, fill: "#E91E63", fillOpacity: 0.7 }}
-                        />
+                        <Line type="monotone" dataKey="maxLoad" name="Carga Máx" stroke="#E91E63" strokeWidth={2} dot={{ fill: "#E91E63", r: 4, strokeWidth: 0 }} activeDot={{ r: 6, fill: "#E91E63" }} />
+                        <Line type="monotone" dataKey="avgLoad" name="Carga Média" stroke="#E91E63" strokeWidth={2} strokeDasharray="4 4" dot={{ fill: "#E91E63", r: 3, strokeWidth: 0, fillOpacity: 0.6 }} activeDot={{ r: 5, fill: "#E91E63", fillOpacity: 0.7 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   )}
@@ -290,7 +246,7 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
           </>
         )}
 
-        {/* ════════════════════════ ABA MÚSCULOS ════════════════════════ */}
+        {/* ABA MÚSCULOS */}
         {activeTab === "musculos" && (
           <>
             {data.muscleGroupStats.length === 0 ? (
@@ -309,15 +265,11 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
                 </p>
                 <div className="space-y-3">
                   {data.muscleGroupStats.map((group) => (
-                    <div
-                      key={group.name}
-                      className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4"
-                    >
+                    <div key={group.name} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-semibold text-white text-sm">{group.name}</p>
                         <p className="text-primary font-bold text-sm">{group.series} séries</p>
                       </div>
-                      {/* Barra de progresso */}
                       <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
@@ -335,7 +287,6 @@ export function ProgressPage({ studentId, studentName, onBack }: ProgressPagePro
           </>
         )}
 
-        {/* Botão voltar ao início */}
         <button
           onClick={onBack}
           className="w-full py-4 rounded-2xl border border-white/10 text-white/60 text-sm font-medium hover:border-white/20 hover:text-white transition-all mt-4"
