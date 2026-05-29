@@ -1,4 +1,4 @@
-// ─── Navigation Steps ────────────────────────────────────────────────────────
+// ─── Navigation Steps ──────────────────────────────────────────────────────────────
 export type AppStep =
   | 'login'
   | 'register'
@@ -13,6 +13,7 @@ export type AppStep =
   | 'workout-plan-list'
   | 'workout-plan-form'
   | 'workout-execution'
+  | 'workout-cycles'
   | 'wellness'
   | 'workout'
   | 'review'
@@ -20,7 +21,7 @@ export type AppStep =
   | 'progress'
   | 'reset-password'
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────────────
 export interface AuthSession {
   trainerId: string
   trainerName: string
@@ -28,7 +29,7 @@ export interface AuthSession {
   expiresAt: string
 }
 
-// ─── Students ────────────────────────────────────────────────────────────────
+// ─── Students ───────────────────────────────────────────────────────────────────────────
 export type Sex = 'M' | 'F'
 
 export interface Student {
@@ -48,7 +49,7 @@ export interface Student {
   anamnesisPendingReview?: boolean
 }
 
-// ─── Anamnese ────────────────────────────────────────────────────────────────
+// ─── Anamnese ──────────────────────────────────────────────────────────────────────────
 export interface Anamnesis {
   id?: string
   studentId: string
@@ -65,7 +66,6 @@ export interface Anamnesis {
   currentExercise?: string
   activityType?: string
   frequency?: string
-  // PAR-Q
   parqHeart?: boolean
   parqChestPain?: boolean
   parqChestPainMonth?: boolean
@@ -74,7 +74,6 @@ export interface Anamnesis {
   parqBloodPressureMed?: boolean
   parqOtherReason?: boolean
   parqObservations?: string
-  // Cliente respondeu (via link público)
   clientData?: Record<string, unknown>
   clientSubmittedAt?: string
   clientLang?: string
@@ -82,8 +81,7 @@ export interface Anamnesis {
   updatedAt?: string
 }
 
-// ─── Avaliação Física ────────────────────────────────────────────────────────
-export type AssessmentProtocol =
+// ─── Avaliação Física ────────────────────────────────────────────────────────────────nexport type AssessmentProtocol =
   | 'jackson_pollock_7'
   | 'pollock_3'
   | 'guedes'
@@ -94,11 +92,9 @@ export interface PhysicalAssessment {
   studentId: string
   assessmentDate: string
   protocol: AssessmentProtocol
-  // Antropometria
   weightKg?: number
   heightM?: number
   bmi?: number
-  // Dobras cutâneas
   skinfoldSubscapular?: number
   skinfoldTriceps?: number
   skinfoldBiceps?: number
@@ -108,7 +104,6 @@ export interface PhysicalAssessment {
   skinfoldAbdominal?: number
   skinfoldThigh?: number
   skinfoldCalf?: number
-  // Perimetria
   circShoulder?: number
   circChest?: number
   circWaist?: number
@@ -122,11 +117,9 @@ export interface PhysicalAssessment {
   circThighLeft?: number
   circCalfRight?: number
   circCalfLeft?: number
-  // Diâmetros ósseos
   boneHumerus?: number
   boneFemur?: number
   boneWrist?: number
-  // Calculados
   sumSkinfolds?: number
   whr?: number
   bodyFatPct?: number
@@ -142,24 +135,24 @@ export interface PhysicalAssessment {
   createdAt?: string
 }
 
-// ─── Wellness ────────────────────────────────────────────────────────────────
+// ─── Wellness ───────────────────────────────────────────────────────────────────────────
 export type StressLevel = 'Baixo' | 'Medio' | 'Alto'
 
 export interface WellnessCheckin {
-  sleep: number       // 1–5
-  nutrition: number   // 1–5
-  mood: number        // 1–5
+  sleep: number
+  nutrition: number
+  mood: number
   stress: StressLevel
-  soreness: number    // 0–10
+  soreness: number
   notes?: string
 }
 
-// ─── Workout ─────────────────────────────────────────────────────────────────
+// ─── Workout ────────────────────────────────────────────────────────────────────────────
 export interface WorkoutSet {
   id: string
   reps: number | null
   weight: number | null
-  rpe?: number        // 1–10 Rate of Perceived Exertion
+  rpe?: number
   completed: boolean
 }
 
@@ -179,23 +172,23 @@ export interface WorkoutSession {
   id: string
   studentId: string
   trainerId: string
-  date: string         // ISO date string YYYY-MM-DD
-  startedAt: string    // ISO datetime string
+  date: string
+  startedAt: string
   wellness: WellnessCheckin
   exercises: WorkoutExercise[]
   status: WorkoutStatus
   durationMinutes?: number
 }
 
-// ─── Workout Plans ──────────────────────────────────────────────────────────
+// ─── Workout Plans ────────────────────────────────────────────────────────────────────
 export interface PlanExercise {
   id: string
   exerciseName: string
   muscleGroup: string
   subGroup: string
   targetSets: number
-  targetReps: string     // e.g. "8-12"
-  targetWeight?: string  // e.g. "30kg" or empty
+  targetReps: string
+  targetWeight?: string
   restSeconds?: number
   notes?: string
 }
@@ -212,7 +205,7 @@ export interface WorkoutPlan {
   updatedAt: string
 }
 
-// ─── Workout Executions ─────────────────────────────────────────────────────
+// ─── Workout Executions ───────────────────────────────────────────────────────────────
 export interface ExecutionSet {
   id: string
   reps: number | null
@@ -222,7 +215,7 @@ export interface ExecutionSet {
 }
 
 export interface ExecutionExercise {
-  exerciseId: string      // matches PlanExercise.id
+  exerciseId: string
   exerciseName: string
   muscleGroup: string
   subGroup: string
@@ -248,7 +241,27 @@ export interface WorkoutExecution {
   createdAt: string
 }
 
-// ─── Session State ───────────────────────────────────────────────────────────
+// ─── Training Cycles ──────────────────────────────────────────────────────────────────
+export interface CycleSummary {
+  sessionsCompleted: number
+  totalVolumeKg: number
+  maxLoadByExercise: Record<string, number>
+}
+
+export interface TrainingCycle {
+  id: string
+  studentId: string
+  planId: string | null
+  cycleNumber: number
+  name: string
+  startDate: string
+  endDate: string | null
+  status: 'active' | 'completed'
+  summary: CycleSummary | null
+  createdAt: string
+}
+
+// ─── Session State ───────────────────────────────────────────────────────────────────
 export interface SessionState {
   step: AppStep
   auth: AuthSession | null
@@ -261,14 +274,14 @@ export interface SessionState {
   editingExecutionId: string | null
 }
 
-// ─── API ─────────────────────────────────────────────────────────────────────
+// ─── API ────────────────────────────────────────────────────────────────────────────────
 export interface ApiResponse<T = void> {
   success: boolean
   data?: T
   error?: string
 }
 
-// ─── Offline Queue ───────────────────────────────────────────────────────────
+// ─── Offline Queue ────────────────────────────────────────────────────────────────────────
 export interface QueuedRequest {
   id: string
   endpoint: string

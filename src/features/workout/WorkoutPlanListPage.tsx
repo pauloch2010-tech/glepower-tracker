@@ -42,6 +42,11 @@ export function WorkoutPlanListPage() {
     navigate('workout-plan-form')
   }
 
+  const handleViewCycles = (id: string) => {
+    setEditingPlan(id)
+    navigate('workout-cycles')
+  }
+
   const handleStartExecution = async (plan: WorkoutPlan) => {
     const exec = await api.createExecution({
       planId: plan.id,
@@ -137,10 +142,7 @@ export function WorkoutPlanListPage() {
                   {new Date(inProgressExec.date).toLocaleDateString('pt-BR')}
                 </p>
               </div>
-              <Button
-                size="sm"
-                onClick={() => handleContinueExecution(inProgressExec.id)}
-              >
+              <Button size="sm" onClick={() => handleContinueExecution(inProgressExec.id)}>
                 Continuar
               </Button>
             </div>
@@ -176,6 +178,16 @@ export function WorkoutPlanListPage() {
                           )}
                         </div>
                         <div className="flex gap-1">
+                          {/* Cycles calendar button */}
+                          <button
+                            onClick={() => handleViewCycles(plan.id)}
+                            title="Ver Ciclos"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-primary/20 text-text-muted hover:text-primary transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </button>
                           <button
                             onClick={() => handleEditPlan(plan.id)}
                             className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-text-muted hover:text-white transition-colors"
@@ -200,13 +212,9 @@ export function WorkoutPlanListPage() {
                         <span>{totalSets} series</span>
                       </div>
 
-                      {/* Lista resumida de exercícios */}
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         {plan.exercises.slice(0, 6).map((ex) => (
-                          <span
-                            key={ex.id}
-                            className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-text-muted"
-                          >
+                          <span key={ex.id} className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-text-muted">
                             {ex.exerciseName}
                           </span>
                         ))}
@@ -236,7 +244,6 @@ export function WorkoutPlanListPage() {
             </Button>
           </>
         ) : (
-          /* Histórico de execuções */
           <>
             {executions.length === 0 ? (
               <Card className="py-12 text-center">
@@ -262,9 +269,7 @@ export function WorkoutPlanListPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                            isCompleted
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-amber-500/20 text-amber-300'
+                            isCompleted ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
                           }`}>
                             #{executions.length - idx}
                           </span>
@@ -294,7 +299,6 @@ export function WorkoutPlanListPage() {
                         </div>
                       </div>
 
-                      {/* Painel de desempenho */}
                       {isCompleted && (() => {
                         const pct = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0
                         const allRpes = exec.exercises.flatMap((e) =>
