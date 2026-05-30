@@ -7,6 +7,8 @@ import type {
   PhysicalAssessment,
   WorkoutPlan,
   WorkoutExecution,
+  TrainingCycle,
+  CycleSummary,
 } from '@/shared/types'
 import { offlineQueue } from '@/shared/services/storage'
 import { supabase } from '@/shared/services/supabase'
@@ -724,6 +726,72 @@ async function supabaseUpdateExecution(id: string, updates: Partial<WorkoutExecu
   return { success: true, data: dbToExecution(data as Record<string, unknown>) }
 }
 
+// ─── Training Cycles ────────────────────────────────────────────────────────
+
+function dbToCycle(r: Record<string, unknown>): TrainingCycle {
+  return {
+    id: r.id as string,
+    studentId: r.student_id as string,
+    planId: (r.plan_id as string) ?? null,
+    cycleNumber: r.cycle_number as number,
+    name: r.name as string,
+    startDate: r.start_date as string,
+    endDate: (r.end_date as string) ?? null,
+    status: r.status as 'active' | 'completed',
+    summary: (r.summary as CycleSummary) ?? null,
+    createdAt: r.created_at as string,
+  }
+}
+
+async function supabaseListCycles(planId: string): Promise<ApiResponse<TrainingCycle[]>> {
+  const { data, error } = await supabase
+    .from('training_cycles')
+    .select('*')
+    .eq('plan_id', planId)
+    .order('cycle_number', { ascending: true })
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, data: (data ?? []).map((r) => dbToCycle(r as Record<string, unknown>)) }
+}
+
+async function supabaseCreateCycle(
+  cycle: Omit<TrainingCycle, 'id' | 'createdAt'>,
+): Promise<ApiResponse<TrainingCycle>> {
+  const { data, error } = await supabase
+    .from('training_cycles')
+    .insert({
+      student_id: cycle.studentId,
+      plan_id: cycle.planId ?? null,
+      cycle_number: cycle.cycleNumber,
+      name: cycle.name,
+      start_date: cycle.startDate,
+      end_date: cycle.endDate ?? null,
+      status: cycle.status,
+      summary: cycle.summary ?? null,
+    })
+    .select()
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, data: dbToCycle(data as Record<string, unknown>) }
+}
+
+async function supabaseCloseCycle(
+  cycleId: string,
+  endDate: string,
+  summary: CycleSummary,
+): Promise<ApiResponse<TrainingCycle>> {
+  const { data, error } = await supabase
+    .from('training_cycles')
+    .update({ status: 'completed', end_date: endDate, summary })
+    .eq('id', cycleId)
+    .select()
+    .single()
+
+  if (error) return { success: false, error: error.message }
+  return { success: true, data: dbToCycle(data as Record<string, unknown>) }
+}
+
 // ─── Anamnese Cliente (token público) ────────────────────────────────────────
 
 /** Busca aluno pelo token de anamnese (sem autenticação) */
@@ -966,6 +1034,20 @@ export const api = {
   },
   updateExecution(id: string, updates: Partial<WorkoutExecution>): Promise<ApiResponse<WorkoutExecution>> {
     if (USE_SUPABASE) return supabaseUpdateExecution(id, updates)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+
+  // ─── Training Cycles ──────────────────────────────────────────────────
+  listCycles(planId: string): Promise<ApiResponse<TrainingCycle[]>> {
+    if (USE_SUPABASE) return supabaseListCycles(planId)
+    return Promise.resolve({ success: true, data: [] })
+  },
+  createCycle(cycle: Omit<TrainingCycle, 'id' | 'createdAt'>): Promise<ApiResponse<TrainingCycle>> {
+    if (USE_SUPABASE) return supabaseCreateCycle(cycle)
+    return Promise.resolve({ success: false, error: 'Supabase não configurado' })
+  },
+  closeCycle(cycleId: string, endDate: string, summary: CycleSummary): Promise<ApiResponse<TrainingCycle>> {
+    if (USE_SUPABASE) return supabaseCloseCycle(cycleId, endDate, summary)
     return Promise.resolve({ success: false, error: 'Supabase não configurado' })
   },
 
